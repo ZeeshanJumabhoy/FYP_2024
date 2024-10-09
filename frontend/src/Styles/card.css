@@ -1,0 +1,147 @@
+/* Gradient background */
+.gradient-bg {
+  background: linear-gradient(135deg, #780116, #D13440, #F17A7E);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px; /* Add padding to avoid cutting edges on smaller screens */
+}
+
+/* Gradient background for the heading */
+.title-container {
+  background: linear-gradient(to right, #46052D, #500732, #5E0933, #610834, #6A0B37, #991747, #B32346);
+  color: white;
+  padding: 20px;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Updated non-transparent form with increased width */
+.glass-form {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 30, 140, 0.24);
+  width: 85%;
+  padding: 30px 40px;
+  min-width: 320px; /* Decrease the minimum width for mobile screens */
+  max-width: 900px; /* Add max-width to control the size on larger screens */
+}
+
+/* non-transparent form for login */
+.glass-for {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 30, 140, 0.24);
+  width: 85%;
+  padding: 30px 40px;
+  min-width: 320px; /* Decrease the minimum width for mobile screens */
+  max-width: 900px; /* Add max-width to control the size on larger screens */
+}
+/* Textbox Input Fields */
+.form-label {
+  font-size: 1rem;
+  width: 150px;
+  margin-right: 5px;
+  text-align: left; /* Align labels to the left */
+}
+
+.textbox-input {
+  background-color: #f9f9f9;
+  border: 0;
+  padding: 10px;
+  border-radius: 8px;
+  width: 100%; /* Make input fields take full width by default */
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  font-size: 1rem;
+  color: #333;
+}
+
+.textbox-input:focus {
+  outline: none;
+  box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+}
+
+/* Button */
+.btn {
+  background-color: #4a71ff;
+  padding: 15px 0;
+  border-radius: 12px;
+  width: 100%; /* Full width on all devices */
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 30, 140, 0.2);
+  transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+  background-color: #003aa7;
+}
+
+/* Links */
+.link {
+  font-weight: bold;
+  color: #0070f3;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* Mobile Styles */
+@media (max-width: 720px) {
+  .glass-form {
+    width: 100%; /* Make form take full width on smaller screens */
+    padding: 20px;
+  }
+
+  .flex {
+    flex-direction: column; /* Stack all flex items vertically */
+  }
+
+  .textbox-input,
+  .btn {
+    width: 100%; /* Ensure inputs take full width on mobile */
+  }
+
+  .form-label {
+    width: 100%; /* Make labels take full width on small screens */
+    margin-bottom: 5px; /* Add margin between label and input */
+    text-align: left;
+  }
+}
+
+@media (max-width: 600px) {
+  .glass-form {
+    padding: 15px;
+  }
+
+  .textbox-input, 
+  .btn {
+    width: 100%; /* Ensure full width of inputs on small devices */
+  }
+
+  .title-container {
+    font-size: 1.2rem; /* Reduce font size on small screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .glass-form {
+    padding: 10px;
+  }
+
+  .textbox-input, 
+  .btn {
+    font-size: 0.9rem; /* Reduce font size for input fields on small screens */
+  }
+
+  .form-label {
+    font-size: 0.9rem; /* Reduce label font size for better spacing */
+  }
+}
