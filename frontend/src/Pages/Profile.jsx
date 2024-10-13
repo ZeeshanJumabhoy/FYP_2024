@@ -1,70 +1,77 @@
 import { React, useState } from 'react'
-import { Link } from 'react-router-dom'
 import toast, { Toaster } from 'react-hot-toast'
 import { useFormik } from 'formik'
 import { useNavigate } from 'react-router-dom'
 import { updateUser } from '../Helper/helper'
 import useFetch from '../hooks/fetch'
-import convertToBase64 from '../Helper/convert'
-import profileIcon from '/img/profile.png'
+import { provinceData, cityData, districtData } from "../Helper/location";
 import '../Styles/card.css'
 
 export default function Register() {
-  const [file, setFile] = useState()
-  const [{ isLoading, error, status, apiData }] = useFetch()
+  const [{ isLoading, error, apiData }] = useFetch()
   const navigate = useNavigate()
+
+  // Format CNIC to XXXXX-XXXXXXX-X pattern
+  const formatCNIC = (value) => {
+    let cnic = value.replace(/\D/g, ""); // Remove all non-numeric characters
+    if (cnic.length > 5) cnic = `${cnic.slice(0, 5)}-${cnic.slice(5)}`;
+    if (cnic.length > 13) cnic = `${cnic.slice(0, 13)}-${cnic.slice(13, 14)}`;
+    return cnic;
+  };
 
   const formik = useFormik({
     initialValues: {
       firstName: apiData?.firstName || '',
       lastName: apiData?.lastName || '',
+      phoneNumber: apiData?.phoneNumber || '',
       email: apiData?.email || '',
-      mobile: apiData?.mobile || '',
-      address: apiData?.address || '',
+      cnic: apiData?.cnic || '',
+      age: apiData?.age || '',
+      bloodGroup: apiData?.bloodGroup || '',
+      province: apiData?.province || '',
+      city: apiData?.city || '',
+      district: apiData?.district || '',
+      pinCode: apiData?.pinCode || '',
+      lastDonationMonth: apiData?.lastDonationMonth || '',
+      lastDonationYear: apiData?.lastDonationYear || '',
     },
 
     enableReinitialize: true,
-    validate: profileValidation,
     validateOnBlur: false,
     validateOnChange: false,
 
     onSubmit: async (values) => {
-      values = { ...values, profile: file || apiData?.profile || '' }
-      const updatePromise = updateUser(values)
-
-      toast.promise(updatePromise, {
-        loading: 'Updating...',
-        success: <b>Profile Update Successfully...!</b>,
-        error: (err) => {
-          setFile(null)
-          return <b>{err.message || "Could'nt Update the Profile...!"}</b>
-        },
-      })
-
-      updatePromise.catch((err) => {})
+      try {
+        const updatePromise = updateUser(values);
+        
+        await toast.promise(updatePromise, {
+          loading: 'Updating...',
+          success: <b>Profile Updated Successfully!</b>,
+          error: (err) => {
+            console.log(err);
+            const errorMessage = err.response?.data?.message || "Couldn't Update the Profile...!";
+            return <b>{errorMessage}</b>; // Display the backend error message
+          }
+        });
+    
+      } catch (err) {
+        console.log("Caught Error:", err); // Ensure errors are logged properly
+      }
     },
+    
   })
-
-  const onUpload = async (ele) => {
-    const uploadedImage = ele.target.files[0]
-    if (uploadedImage) {
-      const convertPromise = convertToBase64(uploadedImage)
-      convertPromise.then((base64Image) => setFile(base64Image))
-    }
-  }
 
   const onLogout = async () => {
     localStorage.removeItem('token')
     navigate('/')
   }
 
-  if (isLoading) {
+  if (!apiData) {
     return (
       <div className="flex justify-center items-center flex-col mt-20">
-        <Toaster position="top-center" reverseOrder={false}></Toaster>
         <h1 className="text-2xl font-bold text-blue-500">Loading...</h1>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -78,76 +85,194 @@ export default function Register() {
   }
 
   return (
-    <div className="container mx-auto">
+    <div className="gradient-bg">
       <Toaster position="top-center" reverseOrder={false}></Toaster>
 
-      <div className="flex justify-center items-start h-full py-5">
-        <div className="glass h-full profile-page">
+      <div className="flex justify-center items-center h-full py-10">
+        <div className="glass-form">
           <div className="title flex flex-col items-center">
-            <h4 className="text-3xl font-bold">Profile</h4>
+            <h4 className="text-3xl font-bold">Update Profile</h4>
             <span className="py-1 text-lg w-full text-center text-gray-500">
               You can update the details.
             </span>
           </div>
 
           <form className="py-1" onSubmit={formik.handleSubmit}>
-            <div className="profile flex justify-center">
-              <label htmlFor="profile">
-                <img
-                  src={file || apiData?.profile || profileIcon}
-                  className="profile-img w-40 cursor-pointer"
-                  alt="avatar"
-                />
-              </label>
-
-              <input
-                onChange={onUpload}
-                type="file"
-                id="profile"
-                name="profile"
-              />
-            </div>
+            <div className="profile flex justify-center"></div>
 
             <div className="textbox flex flex-col items-center gap-6">
-              <div className="name flex w-3/4 gap-10">
+              {/* First Name and Last Name */}
+              <div className="flex justify-between w-full gap-5">
+                <label className="form-label" htmlFor="firstName">
+                  First Name
+                </label>
                 <input
-                  {...formik.getFieldProps('firstName')}
-                  className="textbox-input w-3/4"
+                  {...formik.getFieldProps("firstName")}
+                  className="textbox-input"
                   type="text"
-                  placeholder="FirstName"
-                  maxLength="32"
+                  placeholder="First Name"
                 />
+                <label className="form-label" htmlFor="lastName">
+                  Last Name
+                </label>
                 <input
-                  {...formik.getFieldProps('lastName')}
-                  className="textbox-input w-3/4"
+                  {...formik.getFieldProps("lastName")}
+                  className="textbox-input"
                   type="text"
-                  placeholder="LastName"
-                  maxLength="32"
-                />
-              </div>
-
-              <div className="name flex w-3/4 gap-10">
-                <input
-                  {...formik.getFieldProps('mobile')}
-                  className="textbox-input w-3/4"
-                  type="text"
-                  placeholder="Mobile No."
-                  maxLength="16"
-                />
-                <input
-                  {...formik.getFieldProps('email')}
-                  className="textbox-input w-3/4"
-                  type="text"
-                  placeholder="Email*"
+                  placeholder="Last Name"
                 />
               </div>
 
-              <input
-                {...formik.getFieldProps('address')}
-                className="textbox-input w-3/4"
-                type="text"
-                placeholder="Address"
-              />
+              {/* Contact & CNIC*/}
+              <div className="flex justify-between w-full gap-5">
+                <label className="form-label" htmlFor="phoneNumber">
+                  Phone #
+                </label>
+                <input
+                  {...formik.getFieldProps("phoneNumber")}
+                  value={formik.values.phoneNumber || "+92 3"}
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    // Ensure that the user cannot remove "+92 3" from the input
+                    if (value.startsWith("+92 3") && value.length <= 14) {
+                      formik.setFieldValue("phoneNumber", value);
+                    }
+                  }}
+                  className="textbox-input"
+                  type="tel"
+                  placeholder="Phone Number"
+                  maxLength={14} // +92 3 + 10 digits = 14 characters total
+                />
+                <label className="form-label" htmlFor="cnic">
+                  CNIC
+                </label>
+                <input
+                  {...formik.getFieldProps("cnic")}
+                  value={formatCNIC(formik.values.cnic)}
+                  onChange={(e) =>
+                    formik.setFieldValue("cnic", formatCNIC(e.target.value))
+                  }
+                  className="textbox-input"
+                  type="text"
+                  placeholder="XXXXX-XXXXXXX-X"
+                  maxLength={15}
+                />
+              </div>
+
+              {/* Age & Blood Group */}
+              <div className="flex justify-between w-full gap-5">
+                <label className="form-label" htmlFor="age">
+                  Age
+                </label>
+                <input
+                  {...formik.getFieldProps("age")}
+                  className="textbox-input"
+                  type="number"
+                  placeholder="Age"
+                />
+                <label className="form-label" htmlFor="bloodGroup">
+                  Blood Group
+                </label>
+                <input
+                  {...formik.getFieldProps("bloodGroup")}
+                  className="textbox-input"
+                  type="text"
+                  placeholder="O+, A+, B+, AB+, O-, A-, B-, AB-"
+                />
+              </div>
+
+              {/*Province & CIty*/}
+              <div className="flex justify-between w-full gap-5">
+                <label className="form-label">Province</label>
+                <select
+                  className="textbox-input"
+                  value={formik.values.province} // Set the value to the current formik value
+                  onChange={(e) => {
+                    handleProvinceChange(e); // Keep the handleProvinceChange logic
+                    formik.setFieldValue('province', e.target.value); // Update formik's field value when the province changes
+                  }}
+                >
+                  <option value="" disabled>
+                    Select Province
+                  </option>
+                  {provinceData.map((province) => (
+                    <option key={province} value={province}>
+                      {province}
+                    </option>
+                  ))}
+                </select>
+
+                <label className="form-label">City</label>
+                <select
+                  className="textbox-input"
+                  value={formik.values.city} // Set the value to the current formik value
+                  onChange={(e) => {
+                    handleCityChange(e); // Keep the handleCityChange logic
+                    formik.setFieldValue('city', e.target.value); // Update formik's field value when the city changes
+                  }}
+                  disabled={!formik.values.province} // Disable the city selection if no province is selected
+                >
+                  <option value="" disabled>
+                    Select City
+                  </option>
+                  {cityData[formik.values.province]?.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+
+              {/* District & Postal Code*/}
+              <div className="flex justify-between w-full gap-5">
+                <label className="form-label">District</label>
+                <select
+                  className="textbox-input"
+                  value={formik.values.district} // Set the value to formik's district value
+                  onChange={(e) => {
+                    handleDistrictChange(e); // Keep your existing district change logic
+                    formik.setFieldValue('district', e.target.value); // Update formik's field value when the district changes
+                  }}
+                  disabled={!formik.values.city} // Disable district selection if no city is selected
+                >
+                  <option value="" disabled>
+                    Select District
+                  </option>
+                  {districtData[formik.values.city]?.map((district) => (
+                    <option key={district} value={district}>
+                      {district}
+                    </option>
+                  ))}
+                </select>
+
+
+                <label className="form-label">Postal Code</label>
+                <input
+                  {...formik.getFieldProps("pinCode")}
+                  className="textbox-input"
+                  type="text"
+                  placeholder="Code"
+                />
+              </div>
+
+              {/* Donation History */}
+              <div className="flex justify-between w-full gap-5">
+                <input
+                  {...formik.getFieldProps("lastDonationMonth")}
+                  className="textbox-input"
+                  type="text"
+                  placeholder="Last Donation (Month)"
+                />
+                <input
+                  {...formik.getFieldProps("lastDonationYear")}
+                  className="textbox-input"
+                  type="text"
+                  placeholder="Last Donation (Year)"
+                />
+              </div>
+
               <button className="btn" type="submit">
                 Update
               </button>

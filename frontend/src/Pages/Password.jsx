@@ -6,7 +6,6 @@ import { passwordValidate } from '../Helper/Validate'
 import useFetch from '../hooks/fetch'
 import { useAuthStore } from '../Helper/store'
 import { login } from '../Helper/helper'
-import profileIcon from '/img/profile.png'
 import '../Styles/card.css'
 
 export default function Password() {
@@ -20,7 +19,8 @@ export default function Password() {
     validateOnBlur: false,
     validateOnChange: false,
     onSubmit: async ({ password }) => {
-      let loginPromise = login({ username, password })
+      const email = username;
+      let loginPromise = login({ email, password })
 
       toast.promise(loginPromise, {
         loading: 'Validating Password...',
@@ -56,12 +56,12 @@ export default function Password() {
   }
 
   return (
-    <div className="container mx-auto">
+    <div className="gradient-bg">
       <Toaster position="top-center" reverseOrder={false} />
 
-      <div className="flex justify-center items-center py-10">
-        <div className="card glass">
-          <div className="title flex flex-col items-center">
+      <div className="flex justify-center items-center h-full p-5">
+        <div className="card glass h-full">
+      <div className="title flex flex-col items-center">
             <h4 className="text-4xl font-bold">
               Hello {apiData?.firstName || apiData?.username}
             </h4>
@@ -71,14 +71,6 @@ export default function Password() {
           </div>
 
           <form onSubmit={formik.handleSubmit} className="py1">
-            <div className="profile justify-center items-center">
-              <img
-                src={apiData?.profile || profileIcon}
-                alt="avatar"
-                className="profile-img"
-              />
-            </div>
-
             <div className="textbox flex flex-col items-center justify-center gap-6">
               <input
                 {...formik.getFieldProps('password')}
@@ -88,7 +80,7 @@ export default function Password() {
               />
               <button className="btn" type="submit">
                 Sign In
-              </button>
+              </button>  
             </div>
 
             <div className="text-center py-2">

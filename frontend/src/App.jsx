@@ -11,6 +11,7 @@ import Reset from './Pages/Reset'
 import Profile from './Pages/Profile'
 import PageNotFound from './Pages/PageNotFound'
 import FamilyRegistration from './Pages/familyRegistration';
+import RegisterOTP from './Pages/RegisterOTP'
 
 // Protect Route from unauthorized access
 const ProtectRoute = ({ route, children }) => {
@@ -36,20 +37,20 @@ const router = createBrowserRouter([
     element: <Register />,
   },
   {
+    path: '/verification',
+    element: <RegisterOTP />,
+  },
+  {
     path: '/family-register',
     element: <FamilyRegistration />,
   },
-  /*{
+  {
     path: '/password',
     element: (
       <ProtectRoute route="Password">
         <Password />
       </ProtectRoute>
     ),
-  },*/
-  {
-    path: '/password',
-    element: <Password />,
   },
   {
     path: '/recovery',

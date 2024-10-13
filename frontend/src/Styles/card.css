@@ -60,6 +60,26 @@
   color: #333;
 }
 
+.otp-input {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  width: 54px;
+  height: 54px;
+  color: blue;
+  font-weight: 700;
+  caret-color: blue;
+  border: 1px solid rgb(205, 205, 255);
+  width: 60px !important;
+  height: 60px !important;
+  font-size: 1.4rem !important;
+  margin: 0px 5px;
+}
+
+.otp-input:focus {
+  border: 1px solid blue;
+  outline: none;
+}
+
 .textbox-input:focus {
   outline: none;
   box-shadow: 0 0 5px rgba(81, 203, 238, 1);

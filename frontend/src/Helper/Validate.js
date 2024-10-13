@@ -1,34 +1,30 @@
 import toast from 'react-hot-toast';
 
-export async function usernameValidate(values) {
-    const errors = usernameVerify({}, values);
-    return errors;
-}
-
-export async function passwordValidate(values) {
-    const errors = passwordVerify({}, values);
-    return errors;
-}
-
-export async function resetPasswordValidation(values) {
-    const errors = passwordVerify({}, values, true);
-    return errors;
-}
-
 // Updated registerValidation function
 export async function registerValidation(values) {
-    console.log(values)
     const errors = {};
     firstNameVerify(errors, values);
     lastNameVerify(errors, values);
     phoneNumberVerify(errors, values);
-    emailVerify(errors, values);
     cnicVerify(errors, values);
+    emailVerify(errors, values);
     ageVerify(errors, values);
     passwordVerify(errors, values, true); 
     bloodGroupVerify(errors, values);
-    usernameVerify(errors, values);
+    usernameVerif(errors, values);
     return errors;
+}
+
+function usernameVerif(error = {}, values) {
+    const validRegex = /^[A-Za-z0-9_]+$/;
+
+    if (!values.username) {
+        error.username = toast.error('Username is required...!');
+    } else if (!validRegex.test(values.username)) {
+        toastWarn('Only alphanumeric characters and underscores are allowed in username');
+        error.username = toast.error('Invalid Username...!');
+    }
+    return error;
 }
 
 // First Name Validation
@@ -61,15 +57,13 @@ function phoneNumberVerify(error = {}, values) {
     }  
     return error;  
 }
+
 // Email Validation
 function emailVerify(error = {}, values) {
     const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
     if (!values.email) {
         error.email = "Email is required!";
         toast.error('Email is Required...!');
-    } else if (values.email.includes(' ') || !emailRegex.test(values.email)) {
-        error.email = "Invalid Email!";
-        toast.error('Invalid Email...!');
     }
     return error;
 }
@@ -111,18 +105,30 @@ function bloodGroupVerify(error = {}, values) {
     return error;
 }
 
+export async function useremailValidate(values) {
+    const errors = usernameVerify({}, values);
+    return errors;
+}
 
+export async function passwordValidate(values) {
+    const errors = passwordVerify({}, values);
+    return errors;
+}
+
+export async function resetPasswordValidation(values) {
+    const errors = passwordVerify({}, values, true);
+    return errors;
+}
 
 // Username Validation
 function usernameVerify(error = {}, values) {
-    const validRegex = /^[A-Za-z0-9_]+$/;
+    const validRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
     if (!values.username) {
-        error.username = "Username is required!";
-        toast.error('Username is required...!');
+        error.username = "Email is required!";
+        toast.error('Email is required...!');
     } else if (!validRegex.test(values.username)) {
-        toastWarn('Only alphanumeric characters and underscores are allowed in username');
-        error.username = "Invalid Username!";
-        toast.error('Invalid Username...!');
+        error.username = "Invalid Email!";
+        toast.error('Invalid Email...!');
     }
     return error;
 }

@@ -12,6 +12,7 @@ export default function Recovery() {
   const [otp, setOtp] = useState('')
   const [otpGenerated, setOtpGenerated] = useState(false)
   const navigate = useNavigate()
+ // username="Zeeshan";
 
   const sendOTP = () => {
     const sendPromise = generateOTP(username)
@@ -33,7 +34,8 @@ export default function Recovery() {
   const onSubmit = async (e) => {
     e.preventDefault()
     try {
-      let { status } = await verifyOTP({ username, otp })
+      let email=username;
+      let { status } = await verifyOTP({ email, otp })
       if (status === 201) {
         toast.success('OTP Verified Successfully!')
         return navigate('/reset')
@@ -44,11 +46,11 @@ export default function Recovery() {
   }
 
   return (
-    <div className="container mx-auto">
+    <div className="gradient-bg">
       <Toaster position="top-center" reverseOrder={false} />
 
-      <div className="flex justify-center items-center py-10">
-        <div className="card glass">
+      <div className="flex justify-center items-center h-full py-10">
+        <div className="glass-form">
           <div className="title flex flex-col items-center">
             <h4 className="text-4xl font-bold">Recovery</h4>
             <span className="py-2 text-lg w-2/3 text-center text-gray-500">

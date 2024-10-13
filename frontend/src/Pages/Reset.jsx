@@ -7,7 +7,7 @@ import { useAuthStore } from '../Helper/store'
 import { Navigate, useNavigate } from 'react-router-dom'
 import '../Styles/card.css'
 import useFetch from '../hooks/fetch'
-
+ 
 export default function Password() {
   const { username } = useAuthStore((state) => state.auth)
   const [{ isLoading, error, status }] = useFetch('create-reset-session')
@@ -24,7 +24,8 @@ export default function Password() {
     validateOnChange: false,
 
     onSubmit: async ({ password }) => {
-      const resetPromise = resetPassword({ username, password })
+      let email=username;
+      const resetPromise = resetPassword({ email, password })
       toast.promise(resetPromise, {
         loading: 'Resetting the Password...',
         success: <b>Password Reset Successfully...!</b>,

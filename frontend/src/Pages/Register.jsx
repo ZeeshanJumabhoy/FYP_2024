@@ -4,7 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { useFormik } from "formik";
 import { Password } from "primereact/password"; // Import Password from PrimeReact
 import { registerValidation } from "../Helper/Validate";
-import { register } from "../Helper/helper";
+import { registerverify } from "../Helper/helper";
 import { provinceData, cityData, districtData } from "../Helper/location";
 import "../Styles/card.css";
 import "primereact/resources/themes/saga-blue/theme.css"; // Import PrimeReact CSS
@@ -49,20 +49,21 @@ export default function Register() {
     validateOnChange: false,
 
     onSubmit: async (values) => {
-      const registerPromise = register(values);
+      const registerPromise = registerverify(values);
 
       toast.promise(registerPromise, {
         loading: "Creating...",
         success: (res) => {
-          navigate("/");
-          return <b>Registered Successfully</b>;
+          navigate('/verification', { state: { ...values } });
         },
         error: (err) => {
           return <b>{err.message || "Could Not Register...!"}</b>;
         },
       });
 
-      registerPromise.catch((err) => {});
+      registerPromise.catch((err) => {
+        toast.error(err.message || "Something went wrong!");
+      });      
     },
   });
 
@@ -157,7 +158,7 @@ export default function Register() {
                   maxLength={15}
                 />
               </div>
-
+                  {/* Email & Username*/}
               <div className="flex justify-between w-full gap-5">
                 <label className="form-label" htmlFor="email">
                   Email
@@ -226,7 +227,7 @@ export default function Register() {
                 />
               </div>
 
-              {/* Location */}
+              {/* Province & City */}
               <div className="flex justify-between w-full gap-5">
                 <label className="form-label">Province</label>
                 <select
@@ -261,6 +262,7 @@ export default function Register() {
                 </select>
               </div>
 
+                  {/* District & Postal Code*/}
               <div className="flex justify-between w-full gap-5">
                 <label className="form-label">District</label>
                 <select
@@ -303,6 +305,7 @@ export default function Register() {
                   placeholder="Last Donation (Year)"
                 />
               </div>
+              
               <button className="btn" type="submit">
                 Register
               </button>

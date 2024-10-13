@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { useFormik } from "formik";
-import { usernameValidate } from "../Helper/Validate";
+import { useremailValidate } from "../Helper/Validate";
 import { useAuthStore } from "../Helper/store";
 import { authenticate } from "../Helper/helper";
 import "../Styles/card.css";
@@ -13,7 +13,7 @@ export default function Login() {
 
   const formik = useFormik({
     initialValues: { username: "" },
-    validate: usernameValidate,
+    validate: useremailValidate,
     validateOnBlur: false,
     validateOnChange: false,
 
@@ -21,15 +21,15 @@ export default function Login() {
       const authPromise = authenticate(values.username);
 
       toast.promise(authPromise, {
-        loading: "Fetching username...",
+        loading: "Fetching email...",
         success: (res) => {
           setUsername(values.username);
           navigate("/password");
-          return "Username Found Successfully.";
+          return "Email Found Successfully.";
         },
         error: (err) => {
           navigate("/");
-          return "Username does not exist...!";
+          return "Email does not exist...!";
         },
       });
     },
@@ -49,7 +49,6 @@ export default function Login() {
           </div>
 
           <form onSubmit={formik.handleSubmit} className="py1">
-            {/* Profile image and file upload option removed */}
 
             <div className="textbox flex flex-col items-center justify-center gap-6">
               <input

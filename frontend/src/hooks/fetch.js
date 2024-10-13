@@ -5,7 +5,7 @@ axios.defaults.baseURL = import.meta.env.VITE_SERVER_DOMAIN;
 
 export default function useFetch(query) {
     const [getData, setData] = useState({
-        isLoading: false,
+        isLoading: false, 
         apiData: null,
         error: null,
         status: null,
@@ -15,9 +15,12 @@ export default function useFetch(query) {
         const fetch = async () => {
             try {
                 setData((prev) => ({ ...prev, isLoading: true }));
-                const { username } = !query ? await getUsername() : '';
-                const { data, status } = !query ? await axios.get(`/api/user/${username}`) : await axios.get(`/api/${query}`);
-
+                const { userId } = !query ? await getUsername() : '';
+                //console.log(userId);
+                const id= userId;
+                const { data, status } = !query ? await axios.get(`/api/fetchuser/${id}`) : await axios.get(`/api/${query}`);
+               // console.log(data);
+                
                 if (status === 201) {
                     setData((prev) => ({ ...prev, isLoading: false }));
                 }

@@ -4,29 +4,58 @@ axios.defaults.baseURL = import.meta.env.VITE_SERVER_DOMAIN;
  
 export async function getUsername() {
     const token = localStorage.getItem('token');
+   // console.log(token);
     if (!token) {
         return Promise.reject('Cannot find the Token...!');
     }
     const decodedToken = jwt_decode(token);
-    return decodedToken;
+   // console.log(decodedToken);
+    return decodedToken; // Return the extracted email
 }
-
-export async function authenticate(username) {
+export async function authenticate(email) {
     try {
-        const { status } = await axios.post('/api/authenticate', { username });
+        const { status } = await axios.post('/api/authenticate', { email });
         if (status !== 200) {
-            throw new Error({ message: 'Username not Found...!' });
+            throw new Error({ message: 'Email not Found...!' });
         }
-        return Promise.resolve({ message: 'Username found successfully.' });
+        return Promise.resolve({ message: 'Email found successfully.' });
     } catch (error) {
         return Promise.reject({ error });
     }
 }
+export async function login(credentials) {
+    try {
+        const { data } = await axios.post('http://localhost:8080/api/login', credentials);
+        return Promise.resolve({ data });
+    } catch (e) {
+        return Promise.reject({ error: 'Login Failed...!', e });
+    }
+}
+
+export async function registerverify(credentials) {
+    try {
+        const { status } = await axios.post('/api/registercheck', credentials);
+       // console.log(credentials)
+        // redirects to OTP generation if corrects
+
+        if (status === 201) {
+            let message = 'Redirecting For Verification!';
+            return Promise.resolve({ message });
+        } else {
+            throw new Error('Registration Failed...!');
+        }
+    } catch (err) {
+        let message = err?.response?.data?.error;
+        return Promise.reject({ err, message });
+    }
+}
+
 export async function register(credentials) {
     try {
         const { status } = await axios.post('/api/register', credentials);
-        console.log(credentials)
+       // console.log(credentials)
         // Send Mail if user registered Successfully
+
         if (status === 201) {
             let message = 'Registered Successfully!';
             const mailData = {
@@ -45,16 +74,6 @@ export async function register(credentials) {
         return Promise.reject({ err, message });
     }
 }
-
-export async function login(credentials) {
-    try {
-        const { data } = await axios.post('/api/login', credentials);
-        return Promise.resolve({ data });
-    } catch (e) {
-        return Promise.reject({ error: 'Login Failed...!', e });
-    }
-}
-
 export async function getUser({ username }) {
     try {
         let { data } = await axios.get(`/api/user/${username}`);
@@ -74,15 +93,16 @@ export async function updateUser(credentials) {
         let message = err?.response?.data?.error;
         return Promise.reject({ err, message });
     }
-}
-
+} 
+//change in this
 export async function generateOTP(username) {
+    let email=username;
     try {
-        let { data, status } = await axios.get(`/api/generate-otp`, { params: { username } });
-
+        let { data, status } = await axios.get(`/api/generate-otp`, { params: {email} });
         // Send OTP mail
         if (status === 201) {
-            let { email } = await getUser({ username });
+            //let { email } = await getUser({ username });
+            let username= "Blood Savior";
             const mailData = {
                 username: username,
                 userEmail: email,
