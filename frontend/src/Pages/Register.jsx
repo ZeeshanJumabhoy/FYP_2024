@@ -24,6 +24,7 @@ export default function Register() {
     if (cnic.length > 13) cnic = `${cnic.slice(0, 13)}-${cnic.slice(13, 14)}`;
     return cnic;
   };
+
   const formik = useFormik({
     initialValues: {
       firstName: "",
@@ -42,6 +43,7 @@ export default function Register() {
       pinCode: "",
       lastDonationMonth: "",
       lastDonationYear: "",
+      userType: "individual" // Add userType here
     },
 
     validate: registerValidation,
@@ -55,17 +57,19 @@ export default function Register() {
         loading: "Creating...",
         success: (res) => {
           navigate('/verification', { state: { ...values } });
+          return "Redirecting to Verification";
         },
         error: (err) => {
-          return <b>{err.message || "Could Not Register...!"}</b>;
+          return err.message || "Could not register!";
         },
-      });
+      });      
 
       registerPromise.catch((err) => {
         toast.error(err.message || "Something went wrong!");
       });      
     },
   });
+
 
   const handleProvinceChange = (e) => {
     setSelectedProvince(e.target.value);

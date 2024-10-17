@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-/*export const UserSchema = new mongoose.Schema({
+export const UserSchema = new mongoose.Schema({
     firstName: {
         type: String,
         required: [true, 'First name is required'],
@@ -13,39 +13,6 @@ import mongoose from 'mongoose';
         type: String,
         required: [true, 'Phone number is required'],
         unique: true,
-    },
-    cnic: {
-        type: String,
-        required: [true, 'CNIC is required'],
-        unique: true,
-    },
-    email: {
-        type: String,
-        required: [true, 'Email is required'],
-        unique: true,
-    },
-    age: {
-        type: String,
-        required: [true, 'Age is required'],
-    },
-    bloodGroup: {
-        type: String,
-        required: [true, 'Blood group is required'],
-    },
-});*/
-export const UserSchema = new mongoose.Schema({
-    firstName: {
-        type: String,
-        required: [true, 'First name is required'],
-    },
-    lastName: {
-        type: String,
-        required: [true, 'Last name is required'],
-    },
-    phoneNumber: {
-            type: String,
-            required: [true, 'Phone number is required'],
-            unique: true,
     },
     cnic: {
         type: String,
@@ -93,8 +60,12 @@ export const UserSchema = new mongoose.Schema({
     },
     lastDonationYear: {
         type: String,
+    },
+    userType: {
+        type: String, 
+        enum: ['individual', 'family', 'corporate'], 
+        default: 'individual'
     }
 });
 
-
-export default mongoose.model.Users || mongoose.model('User', UserSchema);
+export default mongoose.model.Userrs || mongoose.model('Userr', UserSchema);

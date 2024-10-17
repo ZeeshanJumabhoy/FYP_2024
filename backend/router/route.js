@@ -8,7 +8,7 @@ import sendMail from '../controllers/mailer.js';
 const router = Router();
 
 // POST Methods  
-router.route('/registercheck').post(controller.registercheck);
+router.route('/registerCheck').post(controller.registerCheck);
 router.route('/register').post(controller.register);
 router.route('/test').get((req, res) => res.status(200).send('Test route works!'));
 router.route('/send-mail').post(sendMail);
@@ -19,6 +19,7 @@ router.route('/login').post(controller.login);
 // GET Methods
 router.route('/user/:email').get(controller.getUser);
 router.route('/fetchuser/:id').get(controller.getfetchUser);
+
 //change in this both
 router.route('/generate-otp').get( controller.generateOTP);
 router.route('/verify-otp').get(controller.verifyOTP);

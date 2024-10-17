@@ -4,7 +4,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { useFormik } from 'formik';
 import { Password } from 'primereact/password'; // Import Password from PrimeReact
 import { registerValidation } from '../Helper/Validate';
-import { register } from '../Helper/helper';
+import { register, registerverify } from '../Helper/helper';
 import { provinceData, cityData, districtData } from '../Helper/location';
 import '../Styles/card.css';
 import 'primereact/resources/themes/saga-blue/theme.css'; // Import PrimeReact CSS
@@ -16,7 +16,7 @@ export default function Register() {
   const [selectedProvince, setSelectedProvince] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
-  const [familyMembers, setFamilyMembers] = useState(1); // State to track number of family members
+  const [familyMembers, setFamilyMembers] = useState(0); // State to track number of family members
 
   // Format CNIC to XXXXX-XXXXXXX-X pattern
   const formatCNIC = (value) => {
@@ -33,19 +33,20 @@ export default function Register() {
       phoneNumber: '',
       cnic: '',
       email: '',
-      address: '',
       age: '',
       bloodGroup: '',
+      username: '',
+      password: '',
+      confirm_password: '',
       province: '',
       city: '',
       district: '',
       pinCode: '',
       lastDonationMonth: '',
       lastDonationYear: '',
-      username: '',
-      password: '',
-      confirm_password: '',
-      familyDetails: Array(9).fill({ firstName: '', lastName: '', cnic: '', age: '' }), // Array for family members
+      userType: 'family',
+      familyMembers: [],
+      //familyMembers: Array(1).fill({ firstName: '', lastName: '', cnic: '', age: '' }), // Array for family members
     },
 
     validate: registerValidation,
@@ -53,20 +54,23 @@ export default function Register() {
     validateOnChange: false,
 
     onSubmit: async (values) => {
-      const registerPromise = register(values);
+      const registerPromise = registerverify(values);
+      console.log(values);
 
       toast.promise(registerPromise, {
-        loading: 'Creating...',
+        loading: "Creating...",
         success: (res) => {
-          navigate('/');
-          return <b>Registered Successfully</b>;
+          navigate('/verification', { state: { ...values } });
+          return "Redirecting to Verification";
         },
         error: (err) => {
           return <b>{err.message || 'Could Not Register...!'}</b>;
         },
       });
 
-      registerPromise.catch((err) => {});
+      registerPromise.catch((err) => {
+        toast.error(err.message || "Something went wrong!");
+      });
     },
   });
 
@@ -88,8 +92,30 @@ export default function Register() {
     formik.setFieldValue('district', e.target.value);
   };
 
+  /* const handleFamilyMemberChange = (e) => {
+     const selectedFamilyMembers = Number(e.target.value);
+     setFamilyMembers(selectedFamilyMembers);
+ 
+     // Update familyDetails array to match the selected number of family members
+     formik.setFieldValue(
+       'familyDetails',
+       Array(selectedFamilyMembers).fill({ firstName: '', lastName: '', cnic: '', age: '' })
+     );
+   };*/
+
   const handleFamilyMemberChange = (e) => {
-    setFamilyMembers(Number(e.target.value)); // Update number of family members
+    const num = parseInt(e.target.value);
+    setFamilyMembers(num);
+
+    // Set familyDetails length based on number of family members
+    const familyMembers = [...Array(num)].map(() => ({
+      firstName: '',
+      cnic: '',
+      age: '',
+      lastDonationMonth: '',
+      lastDonationYear: ''
+    }));
+    formik.setFieldValue('familyMembers', familyMembers);
   };
 
   return (
@@ -195,42 +221,45 @@ export default function Register() {
               </div>
 
               {/* Dropdown for Number of Family Members */}
-              <div className="flex justify-between w-full gap-5">  
-                <label className="form-label" htmlFor="familyMembers">No. of Family Members</label>  
-                <select  
-                  className="textbox-input"  
-                  value={familyMembers}  
-                  onChange={handleFamilyMemberChange}  
-                >  
-                  <option value="" disabled>Select Number of family members</option>  
-                  {[...Array(10).keys()].map((number) => (  
-                    <option key={number + 1} value={number + 1}>  
-                      {number + 1}  
-                    </option>  
-                  ))}  
-                </select>  
+              <div className="flex justify-between w-full gap-5">
+                <label className="form-label" htmlFor="familyMembers">No. of Family Members</label>
+                <select
+                  className="textbox-input"
+                  value={familyMembers}
+                  onChange={handleFamilyMemberChange}
+                >
+                  <option value="" disabled>Select Number of family members</option>
+                  {[...Array(10).keys()].map((number) => (
+                    <option key={number + 1} value={number + 1}>
+                      {number + 1}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Family Member Fields */}
               {[...Array(familyMembers)].map((_, index) => (
                 <div key={index} className="family-member-section">
                   <div className="flex justify-between w-full gap-5 mb-6">
-                    <label className="form-label">Full Name {index + 1}</label>
+                    <label className="form-label">F.Name {index + 1}</label>
                     <input
-                      {...formik.getFieldProps(`familyDetails[${index}].firstName`)}
+                      {...formik.getFieldProps(`familyMembers[${index}].firstName`)}
                       className="textbox-input"
                       type="text"
-                      placeholder={`Full Name ${index + 1}`}
+                      placeholder={`First Name ${index + 1}`}
+                    />
+                    <label className="form-label">L.Name {index + 1}</label>
+                    <input
+                      {...formik.getFieldProps(`familyMembers[${index}].lastName`)}
+                      className="textbox-input"
+                      type="text"
+                      placeholder={`Last Name ${index + 1}`}
                     />
                   </div>
                   <div className="flex justify-between w-full gap-5">
                     <label className="form-label">CNIC {index + 1}</label>
                     <input
-                      {...formik.getFieldProps(`familyDetails[${index}].cnic`)} // Properly map CNIC field for each family member
-                      value={formatCNIC(formik.values.familyDetails[index].cnic)} // Use the specific family member's CNIC value
-                      onChange={(e) =>
-                        formik.setFieldValue(`familyDetails[${index}].cnic`, formatCNIC(e.target.value)) // Correctly set CNIC for the respective family member
-                      }
+                      {...formik.getFieldProps(`familyMembers[${index}].cnic`)}
                       className="textbox-input"
                       type="text"
                       placeholder="XXXXX-XXXXXXX-X"
@@ -238,7 +267,7 @@ export default function Register() {
                     />
                     <label className="form-label">Age {index + 1}</label>
                     <input
-                      {...formik.getFieldProps(`familyDetails[${index}].age`)}
+                      {...formik.getFieldProps(`familyMembers[${index}].age`)}
                       className="textbox-input"
                       type="number"
                       placeholder={`Age ${index + 1}`}

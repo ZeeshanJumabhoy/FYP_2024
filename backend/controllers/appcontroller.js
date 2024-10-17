@@ -1,4 +1,6 @@
 import UserModel from '../model/User.model.js';
+import Family from '../model/Family.model.js';
+import Corporate from '../model/Corporate.model.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
@@ -24,6 +26,7 @@ dotenv.config();
   "pinCode" : "74000"
 }
 */
+/** 
 export async function register(req, res) {
     try {
         const { firstName, lastName, phoneNumber, cnic, email, age, bloodGroup, username, password, province, city, district, pinCode, lastDonationMonth, lastDonationYear } = req.body;
@@ -60,7 +63,6 @@ export async function register(req, res) {
         res.status(500).send({ error: 'An internal error occurred.' });
     }
 }
-
 export async function registercheck(req, res) {
     try {
         const {phoneNumber, cnic, email} = req.body;
@@ -89,6 +91,148 @@ export async function registercheck(req, res) {
     } catch (err) {
         console.error(err);
         res.status(500).send({ error: 'An internal error occurred.' });
+    }
+} */
+
+// Register check function to verify if email, CNIC, or phone number exists
+export async function registerCheck(req, res) {
+    const { email, cnic, phoneNumber, familyMembers } = req.body;
+
+    try {
+        // Check if the primary user's email, CNIC, or phone number already exists
+        const existingUser = await UserModel.findOne({ $or: [{ email }, { cnic }, { phoneNumber }] });
+        const existingFamily = await Family.findOne({ contactEmail: email });
+
+        // If the primary user already exists, return an error with the specific field
+        if (existingUser) {
+            return res.status(400).json({ message: 'The following detail is already in use', detail: existingUser.email ? existingUser.email : existingUser.cnic ? existingUser.cnic : existingUser.phoneNumber });
+        }
+
+        if (existingFamily) {
+            return res.status(400).json({ message: 'Email is already associated with an existing family registration', detail: existingFamily.contactEmail });
+        }
+
+        // Handle case for individual form submission (no family members)
+        if (!familyMembers || familyMembers.length === 0) {
+            // Only primary user data is being submitted (individual form)
+            return res.status(201).json({ message: 'All okay - Individual registration' });
+        }
+
+        // Check if the primary user's CNIC is already in use in the Families collection
+        const existingFamilyWithPrimaryCnic = await Family.findOne({ 'familyMembers.cnic': cnic });
+        if (existingFamilyWithPrimaryCnic) {
+            return res.status(400).json({ message: 'This CNIC is already associated with an existing family registration', detail: cnic });
+        }
+
+        // Check each family member's CNIC for duplicates within the family members being registered
+        const cnicSet = new Set();
+
+        // Collect all family member CNICs and check for duplicates
+        for (const member of familyMembers) {
+            const memberCnic = member.cnic;
+
+            // Check if this CNIC is already in the set (indicating a duplicate)
+            if (cnicSet.has(memberCnic)) {
+                return res.status(400).json({ message: 'Duplicate CNIC found among family members.', detail: memberCnic });
+            }
+
+            // Add the CNIC to the set
+            cnicSet.add(memberCnic);
+        }
+
+        // Check if any family member's CNIC exists in the Users collection
+        const existingFamilyMembersCnic = await UserModel.find({ cnic: { $in: [...cnicSet] } });
+
+        if (existingFamilyMembersCnic.length > 0) {
+            const existingCnics = existingFamilyMembersCnic.map(member => member.cnic);
+            return res.status(400).json({ message: 'One or more family members have a CNIC that is already associated with an existing user.', details: existingCnics });
+        }
+
+        return res.status(201).json({ message: 'All okay - Family registration' });
+
+    } catch (err) {
+        return res.status(501).json({ message: 'Server error', error: err.message });
+    }
+}
+
+
+// Registration function
+export async function register(req, res) {
+    const {
+        firstName, lastName, email, phoneNumber, cnic, age, bloodGroup,
+        username, password, province, city, district, pinCode,lastDonationMonth,lastDonationYear, userType,
+        familyMembers, companyName, companyType, companyEmployeesNum, companyAddress, contactPerson
+    } = req.body;
+
+    try {
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        if (userType === 'individual') {
+            // Register individual user
+            const newUser = new UserModel({
+                firstName, lastName, email, phoneNumber, cnic, age, bloodGroup,
+                username, password: hashedPassword, province, city, district, pinCode,
+                userType: 'individual',
+                lastDonationMonth, // Add this field
+                lastDonationYear   // Add this field
+            });
+        
+            await newUser.save();
+            return res.status(201).json({ message: 'Individual user registered successfully' });
+        }        
+        else if (userType === 'family') {
+            // Register family user
+            const primaryUser = new UserModel({
+                firstName, lastName, email, phoneNumber, cnic, age, bloodGroup,
+                username, password: hashedPassword, province, city, district, pinCode, userType: 'family',
+                lastDonationMonth, // Add this field
+                lastDonationYear   // Add this field
+            });
+
+            await primaryUser.save();
+
+            const family = new Family({
+                primaryUserId: primaryUser._id,
+                familyName: lastName,
+                contactEmail: email,
+                familyMembers: familyMembers.map(member => ({
+                    firstName: member.firstName,
+                    lastName: member.lastName,
+                    cnic: member.cnic,
+                    age: member.age
+                }))
+            });
+
+            await family.save();
+            return res.status(201).json({ message: 'Family registered successfully' });
+
+        } else if (userType === 'corporate') {
+            // Register corporate user
+            const newCorporate = new Corporate({
+                companyName: companyName,
+                companyType: companyType,
+                companyEmployeesNum: companyEmployeesNum,
+                companyEmail: email,
+                password: hashedPassword,
+                companyAddress: companyAddress,
+                province: province,
+                city: city,
+                district: district,
+                pinCode: pinCode,
+                contactPerson: {
+                    name: contactPerson.name,
+                    email: contactPerson.email,
+                    phone: contactPerson.phone,
+                    cnic: contactPerson.cnic
+                }
+            });
+
+            await newCorporate.save();
+            return res.status(201).json({ message: 'Corporate registered successfully' });
+        }
+    } catch (err) {
+        return res.status(500).json({ message: 'Server error', error: err.message });
     }
 }
 
@@ -161,7 +305,7 @@ export async function getUser(req, res) {
             })
             .catch((err) => res.status(501).send({ error: 'Email Not Found' }));
     } catch (err) {
-        return res.status(401).send(err);
+        return res.status(501).send(err);
     }
 }
 

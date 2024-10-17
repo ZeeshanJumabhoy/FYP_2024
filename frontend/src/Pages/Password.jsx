@@ -7,13 +7,13 @@ import useFetch from '../hooks/fetch'
 import { useAuthStore } from '../Helper/store'
 import { login } from '../Helper/helper'
 import '../Styles/card.css'
-
+ 
 export default function Password() {
   const { username } = useAuthStore((state) => state.auth)
   const [{ isLoading, error, status, apiData }] = useFetch(`user/${username}`)
   const navigate = useNavigate()
 
-  const formik = useFormik({
+  const formik = useFormik({ 
     initialValues: { password: '' },
     validate: passwordValidate,
     validateOnBlur: false,

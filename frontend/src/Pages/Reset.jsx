@@ -24,17 +24,25 @@ export default function Password() {
     validateOnChange: false,
 
     onSubmit: async ({ password }) => {
-      let email=username;
-      const resetPromise = resetPassword({ email, password })
-      toast.promise(resetPromise, {
-        loading: 'Resetting the Password...',
-        success: <b>Password Reset Successfully...!</b>,
-        error: <b>Could not reset the password...!</b>,
-      })
-      resetPromise.then(() => {
-        navigate('/password')
-      })
-    },
+      let email = username;
+      try {
+          const resetPromise = resetPassword({ email, password });
+  
+          await toast.promise(resetPromise, {
+              loading: 'Resetting the Password...',
+              success: <b>Password Reset Successfully...!</b>,
+              error: (err) => <b>{err?.error || 'Could not reset the password...'}</b>, // Display the error message
+          });
+  
+          // This part will only run if the password reset was successful
+          resetPromise.then(() => {
+              navigate('/password');
+          });
+  
+      } catch (error) {
+          err.message;
+      }
+  },   
   })
 
   if (status && status !== 201) {
