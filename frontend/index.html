@@ -1,38 +1,86 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!DOCTYPE html>  
+<html lang="en">  
+  <head>  
+    <meta charset="UTF-8" />  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />  
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />  
     
-    <!-- Title and Description -->
-    <title>Login System (MERN Stack)</title>
-    <meta name="description" content="A secure and efficient login system built with the MERN stack." />
-    
-    <!-- Favicons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="./favicon/apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="./favicon/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="./favicon/favicon-16x16.png" />
-    <link rel="manifest" href="./site.webmanifest" />
-    
-    <!-- Open Graph Tags (for social sharing) -->
-    <meta property="og:title" content="Login System (MERN Stack)" />
-    <meta property="og:description" content="A secure and efficient login system built with the MERN stack." />
-    <!-- <meta property="og:image" content="URL_TO_YOUR_SOCIAL_IMAGE" /> -->
-    <!-- <meta property="og:url" content="URL_TO_YOUR_WEBSITE" /> -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Complete Login System" />
+    <!-- Title and Description -->  
+    <title>Home - Blood Link | Login System (MERN Stack)</title>  
+    <meta name="description" content="A secure and efficient login system built with the MERN stack. Blood Link." />  
+    <meta name="keywords" content="Blood Link" />  
+    <link rel="canonical" href="https://www.bloodlinks.in" />  
 
-    <!-- Twitter Card Tags (for Twitter sharing) -->
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Login System (MERN Stack)" />
-    <meta name="twitter:description" content="A secure and efficient login system built with the MERN stack." />
-    <!-- <meta name="twitter:image" content="URL_TO_YOUR_SOCIAL_IMAGE" /> -->
+    <!-- Favicons -->  
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicon/apple-touch-icon.png" />  
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon/favicon-32x32.png" />  
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon/favicon-16x16.png" />  
+    <link rel="icon" href="uploads/app/fav.ico">  
 
-    <!-- Other meta tags as needed for SEO -->
+    <!-- Open Graph Tags (for social sharing) -->  
+    <meta property="og:title" content="Home - Blood Link" />  
+    <meta property="og:description" content="A secure and efficient login system built with the MERN stack." />  
+    <meta property="og:type" content="website" />  
+    <meta property="og:site_name" content="Complete Login System" />  
+
+    <!-- Twitter Card Tags (for Twitter sharing) -->  
+    <meta name="twitter:card" content="summary" />  
+    <meta name="twitter:title" content="Home - Blood Link" />  
+    <meta name="twitter:description" content="A secure and efficient login system built with the MERN stack." />  
+
+    <!-- Stylesheets -->  
+    <link rel="stylesheet" href="assets/css/all.css">  
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">  
+    <link rel="stylesheet" href="assets/css/main.css">  
+    <link rel="stylesheet" href="assets/css/responsive.css">  
+    <link rel="stylesheet" href="assets/css/slick.css">  
+    <link rel="stylesheet" href="assets/css/slick-theme.css">  
+    <link rel="stylesheet" href="assets/css/owl.carousel.min.css">  
+    <link rel="stylesheet" href="assets/css/owl.theme.default.min.css">  
+    <link rel="stylesheet" href="assets/css/meanmenu.css">  
+    <link rel="stylesheet" href="assets/css/header.css">  
+    <link rel="stylesheet" href="assets/css/nice-select.min.css">  
+    <link rel="stylesheet" href="assets/css/custom.css">  
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" referrerpolicy="no-referrer" />  
+
+    <!-- Google Fonts -->  
+    <link rel="preconnect" href="https://fonts.googleapis.com">  
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">  
     
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/index.jsx"></script>
-  </body>
+    <!-- Scripts -->  
+    <script type="text/javascript" src="assets/js/jquery.min.js"></script>  
+    <script type="text/javascript" src="assets/js/bootstrap.min.js"></script>  
+    <script type="text/javascript" src="assets/js/jquery.meanmenu.js"></script>  
+    <script type="text/javascript" src="assets/js/jquery.nice-select.min.js"></script>  
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/superfish/1.7.10/js/superfish.min.js"></script>  
+    <script type="text/javascript" src="assets/js/custom.js"></script>  
+    <script type="text/javascript" src="assets/js/slick.min.js"></script>  
+    <script type="text/javascript" src="assets/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>  
+    <script type="text/javascript" src="assets/js/jquery-validation/jquery.validate.min.js"></script>  
+    <script type="text/javascript" src="assets/js/jquery-validation/additional-methods.min.js"></script>  
+    <script type="text/javascript" src="assets/js/common.js"></script>  
+    <script src='https://kit.fontawesome.com/a076d05399.js'></script>  
+    
+    <script type="text/javascript">  
+      // Mean Menu  
+      jQuery('.mean-menu').meanmenu({  
+         meanScreenWidth: "991"  
+      });  
+
+      $(window).on('scroll', function () {  
+         if ($(this).scrollTop() > 150) {  
+            $('.navbar-area').addClass("is-sticky");  
+         }  
+         else {  
+            $('.navbar-area').removeClass("is-sticky");  
+         }  
+      });  
+    </script>  
+  </head>  
+  <body>  
+    <noscript>You need to enable JavaScript to run this app.</noscript>  
+    <div id="root"></div>  
+    <script type="module" src="/src/index.jsx"></script>  
+  </body>  
 </html>

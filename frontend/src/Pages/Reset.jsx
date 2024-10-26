@@ -7,6 +7,7 @@ import { useAuthStore } from '../Helper/store'
 import { Navigate, useNavigate } from 'react-router-dom'
 import '../Styles/card.css'
 import useFetch from '../hooks/fetch'
+import "../Styles/tailwind.css";
  
 export default function Password() {
   const { username } = useAuthStore((state) => state.auth)

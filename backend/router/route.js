@@ -15,7 +15,7 @@ router.route('/send-mail').post(sendMail);
 router.route('/authenticate').post(middleware.verifyUser, (req, res) => res.end());
 //router.route('/login').post((req, res) => res.status(200).send('Login Route Works!'));
 router.route('/login').post(controller.login);
-
+ 
 // GET Methods
 router.route('/user/:email').get(controller.getUser);
 router.route('/fetchuser/:id').get(controller.getfetchUser);

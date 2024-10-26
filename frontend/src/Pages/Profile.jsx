@@ -1,15 +1,24 @@
-import { React, useState } from 'react'
-import toast, { Toaster } from 'react-hot-toast'
-import { useFormik } from 'formik'
-import { useNavigate } from 'react-router-dom'
-import { updateUser } from '../Helper/helper'
-import useFetch from '../hooks/fetch'
+import { React, useState, useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
+import { useFormik } from 'formik';
+import { useNavigate } from 'react-router-dom';
+import { updateUser } from '../Helper/helper';
+import useFetch from '../hooks/fetch';
 import { provinceData, cityData, districtData } from "../Helper/location";
-import '../Styles/card.css'
+import '../Styles/card.css';
 
 export default function Register() {
-  const [{ isLoading, error, apiData }] = useFetch()
-  const navigate = useNavigate()
+  const [{ isLoading, error, apiData }] = useFetch();
+  const navigate = useNavigate();
+  const [isFamily, setIsFamily] = useState(false); // Track if it's a family user
+  const [familyMembers, setFamilyMembers] = useState([]); // Family members array
+
+  useEffect(() => {
+    if (apiData?.userType === 'family') {
+      setIsFamily(true);
+      setFamilyMembers(apiData.familyMembers || []);
+    }
+  }, [apiData]);
 
   // Format CNIC to XXXXX-XXXXXXX-X pattern
   const formatCNIC = (value) => {
@@ -34,6 +43,7 @@ export default function Register() {
       pinCode: apiData?.pinCode || '',
       lastDonationMonth: apiData?.lastDonationMonth || '',
       lastDonationYear: apiData?.lastDonationYear || '',
+      familyMembers: apiData?.familyMembers || [], // Add family members here
     },
 
     enableReinitialize: true,
@@ -43,7 +53,7 @@ export default function Register() {
     onSubmit: async (values) => {
       try {
         const updatePromise = updateUser(values);
-        
+
         await toast.promise(updatePromise, {
           loading: 'Updating...',
           success: <b>Profile Updated Successfully!</b>,
@@ -53,18 +63,24 @@ export default function Register() {
             return <b>{errorMessage}</b>; // Display the backend error message
           }
         });
-    
+
       } catch (err) {
         console.log("Caught Error:", err); // Ensure errors are logged properly
       }
     },
-    
-  })
+  });
+
+  const handleFamilyMembersChange = (index, field, value) => {
+    const updatedFamilyMembers = [...familyMembers];
+    updatedFamilyMembers[index][field] = value;
+    setFamilyMembers(updatedFamilyMembers);
+    formik.setFieldValue('familyMembers', updatedFamilyMembers); // Update Formik's state
+  };
 
   const onLogout = async () => {
-    localStorage.removeItem('token')
-    navigate('/')
-  }
+    localStorage.removeItem('token');
+    navigate('/');
+  };
 
   if (!apiData) {
     return (
@@ -81,12 +97,15 @@ export default function Register() {
         <h1 className="text-2xl font-bold text-red-500">Server Error</h1>
         <p>{error?.message}</p>
       </div>
-    )
+    );
   }
 
   return (
     <div className="gradient-bg">
-      <Toaster position="top-center" reverseOrder={false}></Toaster>
+      <Toaster position="top-center" reverseOrder={false}>
+      </Toaster>
+
+
 
       <div className="flex justify-center items-center h-full py-10">
         <div className="glass-form">
@@ -123,7 +142,7 @@ export default function Register() {
                 />
               </div>
 
-              {/* Contact & CNIC*/}
+              {/* Contact & CNIC */}
               <div className="flex justify-between w-full gap-5">
                 <label className="form-label" htmlFor="phoneNumber">
                   Phone #
@@ -133,8 +152,6 @@ export default function Register() {
                   value={formik.values.phoneNumber || "+92 3"}
                   onChange={(e) => {
                     const value = e.target.value;
-
-                    // Ensure that the user cannot remove "+92 3" from the input
                     if (value.startsWith("+92 3") && value.length <= 14) {
                       formik.setFieldValue("phoneNumber", value);
                     }
@@ -142,7 +159,7 @@ export default function Register() {
                   className="textbox-input"
                   type="tel"
                   placeholder="Phone Number"
-                  maxLength={14} // +92 3 + 10 digits = 14 characters total
+                  maxLength={14}
                 />
                 <label className="form-label" htmlFor="cnic">
                   CNIC
@@ -159,6 +176,46 @@ export default function Register() {
                   maxLength={15}
                 />
               </div>
+
+              {/* Additional Fields for Family Members (if family type) */}
+              {isFamily && familyMembers.length > 0 && (
+                <div className="family-members-section">
+                  <h5 className="text-xl font-bold">Family Members</h5>
+                  {familyMembers.map((member, index) => (
+                    <div key={index} className="flex justify-between w-full gap-5">
+                      <input
+                        type="text"
+                        className="textbox-input"
+                        placeholder="Full Name"
+                        value={member.firstName || ''}  // Changed to firstName
+                        onChange={(e) =>
+                          handleFamilyMembersChange(index, 'firstName', e.target.value)  // Changed to firstName
+                        }
+                      />
+                      <input
+                        type="text"
+                        className="textbox-input"
+                        placeholder="CNIC"
+                        value={formatCNIC(member.cnic) || ''}
+                        onChange={(e) =>
+                          handleFamilyMembersChange(index, 'cnic', formatCNIC(e.target.value))
+                        }
+                        maxLength={15}
+                      />
+                      <input
+                        type="number"
+                        className="textbox-input"
+                        placeholder="Age"
+                        value={member.age || ''}
+                        onChange={(e) =>
+                          handleFamilyMembersChange(index, 'age', e.target.value)
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
 
               {/* Age & Blood Group */}
               <div className="flex justify-between w-full gap-5">

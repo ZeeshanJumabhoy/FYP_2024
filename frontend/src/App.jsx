@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { useAuthStore } from './Helper/store'
  
 //  Import All Components and Pages
+import Homepage from './Main/Homepage'
 import Register from './Pages/Register'
 import Username from './Pages/Username'
 import Password from './Pages/Password'
@@ -29,7 +30,11 @@ const ProtectRoute = ({ route, children }) => {
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path:'/',
+    element:<Homepage/>,
+  },
+  {
+    path: '/Username',
     element: <Username />,
   },
   {
@@ -89,3 +94,4 @@ export default function App() {
     </main>
   )
 }
+ 

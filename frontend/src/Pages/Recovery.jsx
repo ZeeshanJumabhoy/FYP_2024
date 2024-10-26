@@ -4,7 +4,7 @@ import { useAuthStore } from '../Helper/store'
 import { generateOTP, verifyOTP } from '../Helper/helper'
 import { useNavigate } from 'react-router-dom'
 import OtpInput from 'react-otp-input'
-
+import "../Styles/tailwind.css";
 import '../Styles/card.css'
 
 export default function Recovery() {

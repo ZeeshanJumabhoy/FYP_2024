@@ -6,6 +6,7 @@ import { useremailValidate } from "../Helper/Validate";
 import { useAuthStore } from "../Helper/store";
 import { authenticate } from "../Helper/helper";
 import "../Styles/card.css";
+import "../Styles/tailwind.css";
 
 export default function Login() {
   const setUsername = useAuthStore((state) => state.setUsername);
@@ -66,7 +67,7 @@ export default function Login() {
             <div className="text-center py-2">
               <span>
                 Not a member,{" "}
-                <Link to="/family-register" className="text-blue-500 link">
+                <Link to="/register" className="text-blue-500 link">
                   Register Now
                 </Link>
               </span>

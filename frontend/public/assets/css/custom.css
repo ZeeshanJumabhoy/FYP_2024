@@ -1,0 +1,111 @@
+
+  #accordion {
+    /* margin-top: 27px; */
+  }
+  table,
+  th,
+  td {
+    border: 1px solid black;
+  }
+  .panel-default>.panel-heading {
+
+    color: #fff;
+    background-color: #b40028;
+    border-color: #b40028;
+  }
+
+  #locations{
+    height: 44px;
+    font-size: 15px;
+    margin-left: 15px !important;
+}
+#sdmh_bank span {
+    float: left !important;
+    width: 140px;
+}
+
+.t-3678{
+  display: none;
+}
+  .act-ot{
+    position: absolute !important;
+    z-index: 99;
+    display: none;
+    background: #fff;
+      padding: 10px;
+      top: 55px;
+    width: 190px;
+        box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15)!important;
+        border-radius: 5px;
+  }
+
+  body .act-ot a {
+    padding: 3px 6px !important;
+    margin-bottom: 7px !important;
+    font-size: 15px !important;
+    margin: 0px 0px 2px !important;
+}
+
+.navbar-brand{
+  padding: 0px !important;
+  padding-top: 0.3125rem !important;
+  padding-bottom: 0.3125rem !important;
+}
+.navbar{
+  margin-bottom: 0px !important;
+  padding: 0.5rem 1rem;
+  min-height: 76px !important;
+}
+.col-xl-4 {
+    -ms-flex: 0 0 33.333333% !important;
+    flex: 0 0 33.333333% !important;
+    max-width: 33.333333% !important;
+}
+body .input-group>.form-control, .input-group>.form-select {
+    position: relative !important;
+    flex: 1 1 auto !important;
+    width: 1% !important;
+    min-width: 80% !important;
+}
+.footer-right .input-group .input-group-append button{
+  height: 54px;
+}
+.navbar>.container .navbar-brand{
+  margin-left: 0px !important;
+}
+body .navbar-collapse.collapse{
+  display: flex !important;
+  padding: 0px !important;
+  /* position: relative;
+    left: 100px; */
+}
+.navbar-expand-md .navbar-nav{
+  margin-left: auto!important;
+  width: 810px;
+}
+.breadcrumb {
+    margin-bottom: 0 !important;
+    background: transparent !important;
+    padding: 0.75rem 1rem !important;
+    height: 61px;
+    display: flex !important;
+    align-items: center;
+}
+
+.error{
+  color: red;
+}
+
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  nav a {
+    margin-bottom: 10px;
+  }
+}
+
+
+

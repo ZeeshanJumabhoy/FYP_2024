@@ -10,6 +10,7 @@ import '../Styles/card.css';
 import 'primereact/resources/themes/saga-blue/theme.css'; // Import PrimeReact CSS
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
+import "../Styles/tailwind.css";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -381,7 +382,7 @@ export default function Register() {
             <div className="text-center py-4">
               <span>
                 Already Registered?{' '}
-                <Link className="text-blue-500 link" to="/">
+                <Link className="text-blue-500 link" to="/username">
                   Login Now
                 </Link>
               </span>

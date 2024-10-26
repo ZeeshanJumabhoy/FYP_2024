@@ -7,6 +7,7 @@ import useFetch from '../hooks/fetch'
 import { useAuthStore } from '../Helper/store'
 import { login } from '../Helper/helper'
 import '../Styles/card.css'
+import "../Styles/tailwind.css";
  
 export default function Password() {
   const { username } = useAuthStore((state) => state.auth)

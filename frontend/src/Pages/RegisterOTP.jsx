@@ -4,6 +4,7 @@ import { generateOTP, verifyOTP, register } from '../Helper/helper';
 import { useNavigate, useLocation } from 'react-router-dom';
 import OtpInput from 'react-otp-input';
 import '../Styles/card.css';
+import "../Styles/tailwind.css";
 
 export default function OTPVerification() {
   const [otp, setOtp] = useState('');

@@ -160,7 +160,7 @@ export async function registerCheck(req, res) {
 export async function register(req, res) {
     const {
         firstName, lastName, email, phoneNumber, cnic, age, bloodGroup,
-        username, password, province, city, district, pinCode,lastDonationMonth,lastDonationYear, userType,
+        username, password, province, city, district, pinCode, lastDonationMonth, lastDonationYear, userType,
         familyMembers, companyName, companyType, companyEmployeesNum, companyAddress, contactPerson
     } = req.body;
 
@@ -177,10 +177,10 @@ export async function register(req, res) {
                 lastDonationMonth, // Add this field
                 lastDonationYear   // Add this field
             });
-        
+
             await newUser.save();
             return res.status(201).json({ message: 'Individual user registered successfully' });
-        }        
+        }
         else if (userType === 'family') {
             // Register family user
             const primaryUser = new UserModel({
@@ -319,23 +319,48 @@ export async function getfetchUser(req, res) {
         }
 
         // Find the user by ID
-        UserModel.findOne({ _id: new ObjectId(id) })
-            .then((data) => {
-                if (!data) {
-                    return res.status(404).send({ error: 'User Not Found' });
-                }
+        const user = await UserModel.findOne({ _id: new ObjectId(id) });
+        if (!user) {
+            return res.status(404).send({ error: 'User Not Found' });
+        }
 
-                // Exclude unnecessary fields and keep only firstName, lastName, phoneNumber, email, and address
-                const { firstName, lastName, phoneNumber, email, cnic, age, bloodGroup, province, city, district, pinCode, lastDonationMonth, lastDonationYear } = data;
+        const { userType } = user;
 
-                // Return only the required fields
-                return res.status(200).send({ firstName, lastName, phoneNumber, email, cnic, age, bloodGroup, province, city, district, pinCode, lastDonationMonth, lastDonationYear });
-            })
-            .catch((err) => res.status(500).send({ error: 'Error Fetching User', details: err }));
+        if (userType === "individual") {
+            // Exclude unnecessary fields and return the individual user details
+            const { firstName, lastName, phoneNumber, email, cnic, age, bloodGroup, province, city, district, pinCode, lastDonationMonth, lastDonationYear,userType} = user;
+            return res.status(200).send({ firstName, lastName, phoneNumber, email, cnic, age, bloodGroup, province, city, district, pinCode, lastDonationMonth, lastDonationYear,userType });
+        }
+        else if (userType === "family") {
+            // Fetch head of the family details
+            const { firstName, lastName, phoneNumber, email, cnic, age, bloodGroup, province, city, district, pinCode, lastDonationMonth, lastDonationYear,userType } = user;
+
+            // Fetch family members details from the Family model
+            const family = await Family.findOne({ primaryUserId: new ObjectId(id) });
+            if (!family) {
+                return res.status(404).send({ error: 'Family data not found' });
+            }
+
+            // Include family members in the response
+            const familyMembers = family.familyMembers.map(member => ({
+                firstName: member.firstName,
+                lastName: member.lastName,
+                cnic: member.cnic,
+                age: member.age
+            }));
+
+            return res.status(200).send({
+                firstName, lastName, phoneNumber, email, cnic, age, bloodGroup,
+                province, city, district, pinCode, lastDonationMonth, lastDonationYear,userType,
+                familyMembers  // Add family members details
+            });
+        }
+
     } catch (err) {
         return res.status(500).send({ error: 'Internal Server Error', details: err });
     }
 }
+
 
 async function comparePassword(originalPass, hashedPassword) {
     return new Promise((resolve, reject) => {
@@ -360,38 +385,74 @@ async function comparePassword(originalPass, hashedPassword) {
 export async function updateUser(req, res) {
     try {
         const { userId } = req.user; // Extract the userId from the authenticated user token
-        if (userId) {
-            const newData = req.body;
-            const { cnic, phoneNumber } = newData;
+        const newData = req.body;
+        const { cnic, phoneNumber, familyMembers, userType } = newData;
 
-            // Check if CNIC or phoneNumber already exists for another user
-            const userExists = await UserModel.findOne({
-                $or: [{ cnic }, { phoneNumber }],
-                _id: { $ne: userId }  // Ensure it's not the current user's CNIC or phone number
-            });
-
-            if (userExists) {
-                // If another user with the same CNIC or phone number exists, return error
-                return res.status(400).json({ message: 'CNIC or Phone Number already registered...!' });
-            }
-
-            // If CNIC and phone number are unique, update the user data
-            await UserModel.updateOne({ _id: userId }, newData);
-
-            // Send success response if the update was successful
-            return res.status(200).json({ message: 'User updated successfully!' });
-
-        } else {
-            // If userId is not found in the token
+        // Check if userId is valid
+        if (!userId) {
             return res.status(404).json({ message: 'Invalid User Id...!' });
         }
+
+        // Step 1: Check if CNIC or phoneNumber already exists for another user (individual check)
+        const userExists = await UserModel.findOne({
+            $or: [{ cnic }, { phoneNumber }],
+            _id: { $ne: userId }  // Exclude current user's own record
+        });
+
+        // Step 2: Check if the CNIC exists in the Family collection
+        const familyCnicExists = await Family.findOne({
+            'familyMembers.cnic': cnic
+        });
+
+        // If another user or family member with the same CNIC or phone number exists, return an error
+        if (userExists || familyCnicExists) {
+            return res.status(400).json({
+                message: 'CNIC or Phone Number already registered...!',
+                detail: userExists ? userExists.cnic || userExists.phoneNumber : familyCnicExists ? cnic : null
+            });
+        }
+
+        // Step 3: Update logic for individual users
+        if (userType === 'individual') {
+            // Update the individual user details
+            await UserModel.updateOne({ _id: userId }, newData);
+        }
+
+        // Step 4: Update logic for family users
+        if (userType === 'family') {
+            // Update the user's primary details in UserModel
+            await UserModel.updateOne({ _id: userId }, {
+                firstName: newData.firstName,
+                lastName: newData.lastName,
+                phoneNumber: newData.phoneNumber,
+                email: newData.email,
+                cnic: newData.cnic,
+                age: newData.age,
+                bloodGroup: newData.bloodGroup,
+                province: newData.province,
+                city: newData.city,
+                district: newData.district,
+                pinCode: newData.pinCode,
+                lastDonationMonth: newData.lastDonationMonth,
+                lastDonationYear: newData.lastDonationYear,
+                userType: 'family'
+            });
+
+            // Update family members in the Family collection
+            await Family.updateOne(
+                { primaryUserId: userId },
+                { familyMembers: newData.familyMembers }
+            );
+        }
+
+        // Step 5: Return success response if the update was successful
+        return res.status(200).json({ message: 'User updated successfully!' });
+
     } catch (err) {
         // Catch any other errors that might occur and send a generic server error message
         return res.status(500).json({ message: 'Server Error', error: err.message });
     }
 }
-
-
 
 /** GET: http://localhost:8080/api/generate-otp **/
 
