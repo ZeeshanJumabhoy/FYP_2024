@@ -10,7 +10,7 @@ export default function useFetch(query) {
         error: null,
         status: null,
     });
- 
+  
     useEffect(() => {
         const fetch = async () => {
             try {

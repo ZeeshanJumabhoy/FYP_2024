@@ -1,8 +1,10 @@
 import UserModel from '../model/User.model.js';
 import Family from '../model/Family.model.js';
+import Request from '../model/Request.model.js';
 import Corporate from '../model/Corporate.model.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { ObjectId } from 'mongodb';
 import otpGenerator from 'otp-generator';
@@ -328,12 +330,12 @@ export async function getfetchUser(req, res) {
 
         if (userType === "individual") {
             // Exclude unnecessary fields and return the individual user details
-            const { firstName, lastName, phoneNumber, email, cnic, age, bloodGroup, province, city, district, pinCode, lastDonationMonth, lastDonationYear,userType} = user;
-            return res.status(200).send({ firstName, lastName, phoneNumber, email, cnic, age, bloodGroup, province, city, district, pinCode, lastDonationMonth, lastDonationYear,userType });
+            const { firstName, lastName, phoneNumber, email, cnic, age, bloodGroup, province, city, district, pinCode, lastDonationMonth, lastDonationYear, userType } = user;
+            return res.status(200).send({ firstName, lastName, phoneNumber, email, cnic, age, bloodGroup, province, city, district, pinCode, lastDonationMonth, lastDonationYear, userType });
         }
         else if (userType === "family") {
             // Fetch head of the family details
-            const { firstName, lastName, phoneNumber, email, cnic, age, bloodGroup, province, city, district, pinCode, lastDonationMonth, lastDonationYear,userType } = user;
+            const { firstName, lastName, phoneNumber, email, cnic, age, bloodGroup, province, city, district, pinCode, lastDonationMonth, lastDonationYear, userType } = user;
 
             // Fetch family members details from the Family model
             const family = await Family.findOne({ primaryUserId: new ObjectId(id) });
@@ -351,7 +353,7 @@ export async function getfetchUser(req, res) {
 
             return res.status(200).send({
                 firstName, lastName, phoneNumber, email, cnic, age, bloodGroup,
-                province, city, district, pinCode, lastDonationMonth, lastDonationYear,userType,
+                province, city, district, pinCode, lastDonationMonth, lastDonationYear, userType,
                 familyMembers  // Add family members details
             });
         }
@@ -539,5 +541,132 @@ export async function resetPassword(req, res) {
             .catch((err) => res.status(404).send({ error: 'User Not Found' }));
     } catch (err) {
         res.status(401).send(err);
+    }
+}
+
+export async function requestblood(req, res) {
+    try {
+        const {
+            email,
+            patientName,
+            bloodGroup,
+            units,
+            weight,
+            antibodies,
+            specialRequirements,
+            medicalReason,
+            otherMedicalReason,
+            urgency,
+            bloodComponentType,
+            allergiesAndReactions,
+            hospital = [{}], // Default to empty object array if not provided
+            transfusionDateTime
+        } = req.body;
+
+        // Validation for 'Other' medical reason
+        if (medicalReason === 'Other' && !otherMedicalReason) {
+            return res.status(400).json({ error: 'Please provide a medical reason under "Other"' });
+        }
+
+        const newRequest = new Request({
+            email,
+            patientName,
+            bloodGroup,
+            units,
+            weight,
+            antibodies,
+            specialRequirements: specialRequirements || ['None'],
+            medicalReason,
+            otherMedicalReason,
+            urgency,
+            bloodComponentType,
+            allergiesAndReactions,
+            hospital: {
+                hospitalname: hospital[0]?.hospitalName || '', // Access as array element
+                department: hospital[0]?.department || '',
+                patientId: hospital[0]?.patientId || ''
+            },
+            transfusionDateTime,
+        });
+
+        await newRequest.save();        
+
+        return res.status(201).json({
+            message: 'Blood request created successfully',
+            request: newRequest
+        });
+    } catch (error) {
+        console.error('Error creating blood request:', error);
+        return res.status(500).json({ error: 'An error occurred while creating the blood request' });
+    }
+}
+
+export async function getAllUserEmails(req, res) {
+    try {
+        const { email } = req.params; // Extract the email to exclude from the request parameters
+
+        // Fetch both emails and first names, excluding the specified email
+        const users = await UserModel.find({ email: { $ne: email } }, 'email firstName');
+        
+        // Map the result to extract emails and first names
+        const userDetails = users.map(user => ({
+            email: user.email,
+            firstName: user.firstName
+        }));
+
+        res.status(200).json({ users: userDetails }); // Send the emails and first names as JSON response
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        res.status(500).json({ message: 'Failed to retrieve user details.' });
+    }
+}
+
+
+export async function notifyUsersOfBloodRequest(req, res) {
+    try {
+        // Fetch all user emails
+        const users = await User.find({}, 'email');
+        const allEmails = users.map(user => user.email);
+
+        // Define email subject and message
+        const subject = "Urgent Blood Donation Request";
+        const requestDetails = req.body; // Include relevant request details
+        const message = `A blood request has been made. Details: ${JSON.stringify(requestDetails)}`;
+
+        // Send email to each user (consider batch sending for larger user bases)
+        await Promise.all(
+            allEmails.map(email =>
+                sendEmail(email, subject, message).catch(err => {
+                    console.log(`Failed to send email to ${email}:`, err);
+                })
+            )
+        );
+
+        res.status(200).json({ message: 'Blood request created and notifications sent to all users.' });
+    } catch (error) {
+        console.error('Error notifying users:', error);
+        res.status(500).json({ message: 'Failed to send blood request notifications.' });
+    }
+}
+
+export async function sendBloodRequestEmails(req, res) {
+    try {
+        // Get all user emails except the excluded one
+        const allEmails = req.body
+        
+        // Define email subject and message
+        const subject = "Urgent Blood Donation Request";
+        const message = `A blood request has been made. Details: ${JSON.stringify(requestDetails)}`;
+
+        // Send the email to each address in the list
+        allEmails.forEach(email => {
+            sendEmail(email, subject, message)
+                .catch(err => console.log(`Failed to send email to ${email}:`, err));
+        });
+        
+        console.log("Blood request emails sent successfully.");
+    } catch (error) {
+        console.error("Error sending blood request emails:", error);
+        throw new Error("Failed to send blood request emails.");
     }
 }

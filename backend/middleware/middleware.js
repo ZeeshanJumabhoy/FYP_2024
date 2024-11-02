@@ -15,7 +15,7 @@ export async function auth(req, res, callback) {
         res.status(401).send(err);
     }
 }
-
+ 
 // Check Username Exists
 export async function verifyUser(req, res, callback) {
     try {

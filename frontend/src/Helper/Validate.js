@@ -154,3 +154,163 @@ function passwordVerify(errors = {}, values, confirm = false) {
     }
     return errors;
 } 
+
+export async function requestBloodValidation(values) {
+    const errors = {};
+
+    patientNameVerify(errors, values);
+    bloodGroupVerify(errors, values);
+    unitsVerify(errors, values);
+    weightVerify(errors, values);
+    specialRequirementsVerify(errors, values);
+    medicalReasonVerify(errors, values);
+    urgencyVerify(errors, values);
+    bloodComponentTypeVerify(errors, values);
+    allergiesAndReactionsVerify(errors, values);
+    transfusionDateTimeVerify(errors, values);
+
+    return errors;
+}
+
+// Patient Name Validation
+function patientNameVerify(error = {}, values) {
+    if (!values.patientName) {
+        error.patientName = "Patient Name is required!";
+        toast.error('Patient Name is required...!');
+    }
+    return error;
+}
+
+// Units Validation
+function unitsVerify(error = {}, values) {
+    if (values.units === undefined || values.units < 1 || values.units > 10) {
+        error.units = "Units must be between 1 and 10!";
+        toast.error('Units must be between 1 and 10!');
+    }
+    return error;
+}
+
+// Weight Validation
+function weightVerify(error = {}, values) {
+    if (values.weight === undefined || values.weight <= 0) {
+        error.weight = "Weight must be a positive number!";
+        toast.error('Weight must be a positive number!');
+    }
+    return error;
+}
+
+// function antibodiesVerify(error = {}, values) {
+//     const validBloodGroups = ['None','Anti-A', 'Anti-B', 'Anti-D', 'Anti-A and Anti-B', 'Anti-A, Anti-D', 'Anti-B, Anti-D', 'Anti-A and Anti-B, Anti-D'];
+//      if (!validBloodGroups.includes(values.bloodGroup)) {
+//         error.bloodGroup = "Invalid Antibodies!";
+//         toast.error('Invalid Antibodies...!');
+//     }
+//     return error;
+// }
+
+// Special Requirements Validation
+function specialRequirementsVerify(error = {}, values) {
+    const validRequirements = [
+        'None', 'Irradiated Blood', 'Leukocyte Reduced',
+        'Washed Blood', 'CMV-Negative Blood',
+        'HLA-Matched Platelets', 'Fresh Blood (<5 Days Old)'
+    ];
+
+    // Check if any special requirement is selected
+    if (values.specialRequirements.length === 0) {
+        error.specialRequirements = "At least one special requirement must be selected!";
+        toast.error('At least one special requirement must be selected!');
+    } else {
+        // Validate selected requirements against valid requirements
+        const invalidRequirements = values.specialRequirements.filter(req => !validRequirements.includes(req));
+        if (invalidRequirements.length > 0) {
+            error.specialRequirements = "Invalid special requirements selected!";
+            toast.error('Invalid special requirements selected!');
+        }
+    }
+
+    return error;
+}
+
+
+
+// Medical Reason Validation
+function medicalReasonVerify(error = {}, values) {
+    const validReasons = [
+        'Anemia', 'Trauma/Emergency Surgery', 'Elective Surgery', 'Cancer Treatment',
+        'Organ Transplant', 'Burn Treatment', 'Bleeding Disorder (e.g., Hemophilia)',
+        'Pregnancy/Childbirth Complications', 'Heart Surgery', 'Liver Disease',
+        'Kidney Disease', 'Neonatal Transfusion', 'Other'
+    ];
+    if (!values.medicalReason) {
+        error.medicalReason = "Medical Reason is required!";
+        toast.error('Medical Reason is required...!');
+    } else if (!validReasons.includes(values.medicalReason)) {
+        error.medicalReason = "Invalid Medical Reason!";
+        toast.error('Invalid Medical Reason!');
+    } else if (values.medicalReason === 'Other' && !values.otherMedicalReason) {
+        error.otherMedicalReason = "Please specify the medical reason!";
+        toast.error('Other Medical Reason is required!');
+    }
+    return error;
+}
+
+// Urgency Validation
+function urgencyVerify(error = {}, values) {
+    const validUrgency = ['Emergency', 'Urgent', 'Routine'];
+    if (!values.urgency) {
+        error.urgency = "Urgency is required!";
+        toast.error('Urgency is required...!');
+    } else if (!validUrgency.includes(values.urgency)) {
+        error.urgency = "Invalid Urgency!";
+        toast.error('Invalid Urgency!');
+    }
+    return error;
+}
+
+// Blood Component Type Validation
+function bloodComponentTypeVerify(error = {}, values) {
+    const validComponents = [
+        'Whole Blood', 'Red Blood Cells (RBCs)', 'Platelets', 'Plasma',
+        'Cryoprecipitate', 'Granulocytes'
+    ];
+    if (!values.bloodComponentType) {
+        error.bloodComponentType = "Blood Component Type is required!";
+        toast.error('Blood Component Type is required...!');
+    } else if (!validComponents.includes(values.bloodComponentType)) {
+        error.bloodComponentType = "Invalid Blood Component Type!";
+        toast.error('Invalid Blood Component Type!');
+    }
+    return error;
+}
+
+// Allergies and Reactions Validation
+function allergiesAndReactionsVerify(error = {}, values) {
+    if (values.allergiesAndReactions && typeof values.allergiesAndReactions !== 'string') {
+        error.allergiesAndReactions = "Allergies and Reactions must be a string!";
+        toast.error('Invalid format for Allergies and Reactions!');
+    }
+    return error;
+}
+
+// // Hospital Information Validation
+// function hospitalVerify(error = {}, values) {
+//     if (!values.Hospital || !values.Hospital.patientId) {
+//         error.patientId = "Patient ID is required!";
+//         toast.error('Patient ID is required!');
+//     }
+//     return error;
+// }
+
+// Transfusion Date and Time Validation
+function transfusionDateTimeVerify(error = {}, values) {
+    const currentDate = new Date();
+    if (!values.transfusionDateTime) {
+        error.transfusionDateTime = "Transfusion date and time is required!";
+        toast.error('Transfusion date and time is required!');
+    } else if (new Date(values.transfusionDateTime) <= currentDate) {
+        error.transfusionDateTime = "Transfusion date and time must be in the future!";
+        toast.error('Invalid Transfusion date and time!');
+    }
+    return error;
+}

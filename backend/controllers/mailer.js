@@ -12,21 +12,36 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-/** POST: http://localhost:8080/api/send-mail
- * @param: {
-  "username" : "the_247",
-  "userEmail" : "the_247@superverse.com",
-  "text" : "Hello, This is a test mail sent to you! Please Ignore it.",
-  "subject" : "TEST MAIL",
-}
-*/
 export default async function sendMail(req, res) {
-    console.log("hello from email");
     try {
-        const { username, userEmail, subject, mailType, otp } = req.body;
-        const fromAddress = `Superverse 🚀 <${process.env.EMAIL}>`;
+        const {
+            username,
+            userEmail,
+            subject,
+            mailType,
+            bloodGroup,
+            units,
+            urgency,
+            specialRequirements,
+            medicalReason,
+            transfusionDateTime,
+            hospitalName
+        } = req.body;
+
+        const fromAddress = `Blood Safe Life 🩸 <${process.env.EMAIL}>`;
         const toAddress = `${username} <${userEmail}>`;
-        const mailHtml = createMail(mailType, { username, otp });
+
+        // Include the new data in the `mailHtml` by passing it to `createMail`
+        const mailHtml = createMail(mailType, {
+            username,
+            bloodGroup,
+            units,
+            urgency,
+            specialRequirements,
+            medicalReason,
+            transfusionDateTime,
+            hospitalName
+        });
 
         const email = {
             from: fromAddress,

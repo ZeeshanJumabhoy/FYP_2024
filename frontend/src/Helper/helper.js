@@ -1,14 +1,14 @@
 import axios from 'axios';
 import jwt_decode from 'jwt-decode';
+import useFetch from '../hooks/fetch';
 axios.defaults.baseURL = import.meta.env.VITE_SERVER_DOMAIN;
- 
+
 export async function getUsername() {
     const token = localStorage.getItem('token');
     if (!token) {
         return Promise.reject('Cannot find the Token...!');
     }
     const decodedToken = jwt_decode(token);
-   // console.log(decodedToken);
     return decodedToken; // Return the extracted email
 }
 export async function authenticate(email) {
@@ -34,9 +34,9 @@ export async function login(credentials) {
 export async function registerverify(credentials) {
     try {
         const { status } = await axios.post('/api/registerCheck', credentials);
-       // console.log(credentials)
+        // console.log(credentials)
         // redirects to OTP generation if corrects
- 
+
         if (status === 201) {
             let message = 'Redirecting For Verification!';
             return Promise.resolve({ message });
@@ -52,7 +52,7 @@ export async function registerverify(credentials) {
 export async function register(credentials) {
     try {
         const { status } = await axios.post('/api/register', credentials);
-       // console.log(credentials)
+        // console.log(credentials)
         // Send Mail if user registered Successfully
 
         if (status === 201) {
@@ -73,6 +73,7 @@ export async function register(credentials) {
         return Promise.reject({ err, message });
     }
 }
+
 /*export async function getUser({ username }) {
     try {
         let { data } = await axios.get(`/api/user/${username}`);
@@ -92,16 +93,19 @@ export async function updateUser(credentials) {
         let message = err?.response?.data?.error;
         return Promise.reject({ err, message });
     }
-} 
+}
+
+
+
 //change in this
 export async function generateOTP(username) {
-    let email=username;
+    let email = username;
     try {
-        let { data, status } = await axios.get(`/api/generate-otp`, { params: {email} });
+        let { data, status } = await axios.get(`/api/generate-otp`, { params: { email } });
         // Send OTP mail
         if (status === 201) {
             //let { email } = await getUser({ username });
-            let username= "Blood Savior";
+            let username = "Blood Savior";
             const mailData = {
                 username: username,
                 userEmail: email,
@@ -138,3 +142,80 @@ export async function resetPassword(credentials) {
     }
 }
 
+export async function requestblood(credentials) {
+    try {
+        const token = await localStorage.getItem('token');
+
+        // Exclude firstName from credentials
+        const { firstName, ...filteredCredentials } = credentials;
+
+        const { status, data } = await axios.post('api/requestblood', filteredCredentials, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (status === 201) {
+            let message = 'Your Blood Request is Underway – We are Here to Help';
+            const mailData = {
+                username: credentials.firstName, // Use firstName here if needed
+                userEmail: credentials.email,
+                subject: message,
+                mailType: 'bloodrequest',
+            };
+            await axios.post('/api/send-mail', mailData);
+            return Promise.resolve({ status });
+        } else {
+            throw new Error('Registration Failed...!');
+        }
+
+    } catch (err) {
+        let message = err?.response?.data?.error;
+        return Promise.reject({ err, message });
+    }
+}
+
+export async function sendBloodRequestEmails(credentials) {
+    try {
+        // Fetch all user emails and first names
+        const response = await axios.get(`/api/getAllUserEmails/${credentials.email}`);
+        const users = response.data.users;
+
+        // Iterate over each user and send the email
+        const {
+            bloodGroup,
+            units,
+            urgency,
+            specialRequirements,
+            medicalReason,
+            transfusionDateTime,
+            hospital
+        } = credentials;
+
+        const hospitalName = hospital[0]?.hospitalName || '';
+        const emailDetails = {
+            bloodGroup,
+            units,
+            urgency,
+            specialRequirements: specialRequirements.length > 0 ? specialRequirements : ['None'],
+            medicalReason,
+            transfusionDateTime,
+            hospitalName,// Get first hospital object if available
+        };
+        
+        for (const user of users) {
+            const mailData = {
+                username: user.firstName, // Use the first name from the response
+                userEmail: user.email,     // Use the email from the response
+                subject: 'Urgent Blood Donation Request',
+                mailType: 'interestbloodgiving',
+                ...emailDetails,
+            };
+
+            // Send email to each user
+            await axios.post('/api/send-mail', mailData);
+        }
+        
+        console.log('Emails sent to all users successfully.');
+    } catch (error) {
+        console.error('Error sending emails:', error);
+    }
+}
