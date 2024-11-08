@@ -621,7 +621,6 @@ export async function getAllUserEmails(req, res) {
     }
 }
 
-
 export async function notifyUsersOfBloodRequest(req, res) {
     try {
         // Fetch all user emails
@@ -668,5 +667,58 @@ export async function sendBloodRequestEmails(req, res) {
     } catch (error) {
         console.error("Error sending blood request emails:", error);
         throw new Error("Failed to send blood request emails.");
+    }
+}
+
+export async function getbloodrequestinfo(req, res) {
+    try {
+        const { email } = req.params;
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+        const requests = await Request.find({ email });
+        if (!requests || requests.length === 0) {
+            return res.status(404).json({ message: 'No blood request has been made with this email.' });
+        }
+
+        return res.status(200).json({
+            message: 'Blood request information retrieved successfully.',
+            requests,
+        });
+    } catch (error) {
+        console.error('Error fetching blood request info:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+// Function to get all pending blood requests
+export async function getAllPendingBloodRequests(req, res) {
+    try {
+
+        const pendingRequests = await Request.find({ status: 'Pending' });
+        if (!pendingRequests || pendingRequests.length === 0) {
+            return res.status(404).json({ message: 'No pending blood requests found.' });
+        }
+
+        const responseData = pendingRequests.map(request => ({
+            bloodGroup: request.bloodGroup,
+            units: request.units,
+            urgency: request.urgency,
+            medicalReason: request.medicalReason,
+            antibodies: request.antibodies,
+            hospitalName: request.hospital?.hospitalname || 'N/A',
+            department: request.hospital?.department || 'N/A',
+            transfusionDateTime: request.transfusionDateTime,
+            specialRequirements: request.specialRequirements,
+        }));
+
+        // Send the filtered pending request data
+        return res.status(200).json({
+            message: 'Pending blood requests retrieved successfully.',
+            requests: responseData,
+        });
+    } catch (error) {
+        console.error('Error fetching pending blood requests:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
 }

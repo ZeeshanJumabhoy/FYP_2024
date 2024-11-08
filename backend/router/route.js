@@ -14,13 +14,14 @@ router.route('/test').get((req, res) => res.status(200).send('Test route works!'
 router.route('/send-mail').post(sendMail);
 router.route('/authenticate').post(middleware.verifyUser, (req, res) => res.end());
 router.route('/login').post(controller.login);
-//router.route('/requestblood').post(controller.requestblood);
 router.route('/requestblood').post(middleware.auth,controller.requestblood);
  
 // GET Methods
 router.route('/user/:email').get(controller.getUser);
 router.route('/fetchuser/:id').get(controller.getfetchUser);
 router.route('/getAllUserEmails/:email').get(controller.getAllUserEmails);
+router.route('/getbloodrequestinfo/:email').get(controller.getbloodrequestinfo);
+router.route('/getAllPendingBloodRequests').get(controller.getAllPendingBloodRequests);
 
 //change in this both
 router.route('/generate-otp').get( controller.generateOTP);
