@@ -95,8 +95,6 @@ export async function updateUser(credentials) {
     }
 }
 
-
-
 //change in this
 export async function generateOTP(username) {
     let email = username;
@@ -219,3 +217,5 @@ export async function sendBloodRequestEmails(credentials) {
         console.error('Error sending emails:', error);
     }
 }
+
+  

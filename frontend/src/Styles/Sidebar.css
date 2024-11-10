@@ -1,0 +1,13 @@
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pro-sidebar-inner {
+  background-color: #fff;
+}
+
+.menu-item:hover {
+  background-color: #fdd835 !important;
+}

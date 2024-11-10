@@ -676,7 +676,10 @@ export async function getbloodrequestinfo(req, res) {
         if (!email) {
             return res.status(400).json({ error: 'Email is required' });
         }
-        const requests = await Request.find({ email });
+
+        const requests = await Request.find({ email })
+            .select('-_id -createdAt -updatedAt -email -__v'); // Exclude fields
+
         if (!requests || requests.length === 0) {
             return res.status(404).json({ message: 'No blood request has been made with this email.' });
         }
@@ -690,6 +693,7 @@ export async function getbloodrequestinfo(req, res) {
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 }
+
 
 // Function to get all pending blood requests
 export async function getAllPendingBloodRequests(req, res) {

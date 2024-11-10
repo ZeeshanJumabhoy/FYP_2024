@@ -14,6 +14,7 @@ import PageNotFound from './Pages/PageNotFound'
 import FamilyRegistration from './Pages/familyRegistration';
 import RegisterOTP from './Pages/RegisterOTP'
 import RequestBlood from './Pages/RequestBlood'
+import RequestBloodInfo from './Pages/RequestBloodInfo'
 
 // Protect Route from unauthorized access
 const ProtectRoute = ({ route, children }) => {
@@ -32,7 +33,7 @@ const ProtectRoute = ({ route, children }) => {
 const router = createBrowserRouter([
   {
     path:'/',
-    element:<Homepage/>,
+    element:<RequestBloodInfo/>,
   },
   {
     path: '/Username',
@@ -87,6 +88,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectRoute route="RequestBlood">
         <RequestBlood />
+      </ProtectRoute>
+    ),
+  },
+  {
+    path: '/RequestBloodInfo',
+    element: (
+      <ProtectRoute route="RequestBloodInfo">
+        <RequestBloodInfo />
       </ProtectRoute>
     ),
   },
