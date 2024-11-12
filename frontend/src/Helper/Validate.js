@@ -1,5 +1,6 @@
 import toast from 'react-hot-toast';
 
+
 // Updated registerValidation function
 export async function registerValidation(values) {
     const errors = {};
@@ -314,3 +315,55 @@ function transfusionDateTimeVerify(error = {}, values) {
     }
     return error;
 }
+
+export function checkEligibility(error = {}, values = {}) {
+    // Ensure that `answers` exists and contains all required properties
+    const answers = values || {};
+
+    // Check General Health
+    if (
+        answers?.feelingToday === "Not feeling well" ||
+        answers?.recentSymptoms !== "None of the above" ||
+        answers?.pastMonth !== "None of the above"
+    ) {
+        error.generalHealth = "Ineligible due to general health issues.";
+        return error;
+    }
+
+    // Check Medical History
+    if (
+        answers?.medication === "Yes" ||
+        answers?.diagnosed !== "No" ||
+        answers?.surgeries === "Yes" ||
+        answers?.transplant === "Yes"
+    ) {
+        error.medicalHistory = "Ineligible due to medical history issues.";
+        return error;
+    }
+
+    // Check Lifestyle and Risk Factors
+    if (
+        answers?.tattoo === "Yes" ||
+        answers?.riskFactors !== "None of the above" ||
+        answers?.travel === "Yes" ||
+        answers?.smoke === "Yes, daily" ||
+        answers?.alcohol === "5 or more drinks"
+    ) {
+        error.lifestyle = "Ineligible due to lifestyle risk factors.";
+        return error;
+    }
+
+    // Check Eligibility Confirmation
+    if (
+        answers?.pregnant === "Yes" ||
+        answers?.weight === "Yes" ||
+        answers?.medicalExam === "No" ||
+        answers?.confirmation === "No"
+    ) {
+        error.eligibilityConfirmation = "Ineligible due to eligibility confirmation issues.";
+        return error;
+    }
+
+    return true; // Eligible
+}
+

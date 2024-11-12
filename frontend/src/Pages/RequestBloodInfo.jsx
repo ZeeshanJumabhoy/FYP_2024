@@ -3,14 +3,22 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import useFetch from "../hooks/fetch";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrash, faEdit } from "@fortawesome/free-solid-svg-icons";
+import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table';
+import 'react-super-responsive-table/dist/SuperResponsiveTableStyle.css';
 import "../Styles/tailwind.css";
 
 axios.defaults.baseURL = import.meta.env.VITE_SERVER_DOMAIN;
 
 export default function RequestBlood() {
   const navigate = useNavigate();
+  const [{ apiData, isLoading: emailLoading, error: emailError }] = useFetch();
+  const { email, firstName } = apiData || {};
+  const userEmail =email;
+  console.log(userEmail);
   const [activeButton, setActiveButton] = useState("all");
-  const [data, setData] = useState([]);
+  const [data, setdata] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -18,10 +26,29 @@ export default function RequestBlood() {
   const [{ apiData: allRequests, isLoading: allLoading, error: allError }] =
     useFetch("getAllPendingBloodRequests");
 
+    const [userRequests, setUserRequests] = useState(null);
+    const [userLoading, setUserLoading] = useState(false);
+    const [userError, setUserError] = useState(null);
+
   // Fetch user's specific blood requests
-  const userEmail = "mustafazeeshan333@gmail.com"; // Replace with dynamic email
-  const [{ apiData: userRequests, isLoading: userLoading, error: userError }] =
-    useFetch(`getbloodrequestinfo/${userEmail}`);
+  // Replace wiTh dynamic email
+  useEffect(() => {
+    if (userEmail) {
+      const fetchUserRequests = async () => {
+        setUserLoading(true);
+        try {
+          const response = await axios.get(`/api/getbloodrequestinfo/${userEmail}`);
+          setUserRequests(response.data);
+        } catch (error) {
+          setUserError("Failed to load your blood requests");
+          toast.error("Failed to load your blood requests");
+        } finally {
+          setUserLoading(false);
+        }
+      };
+      fetchUserRequests();
+    }
+  }, [userEmail]);
 
   // Fetch data based on active button type
   const fetchData = (buttonType) => {
@@ -33,14 +60,14 @@ export default function RequestBlood() {
         setError("Failed to load all blood requests");
         toast.error("Failed to load all blood requests");
       } else if (allRequests) {
-        setData(allRequests.requests || []);
+        setdata(allRequests.requests || []);
       }
     } else {
       if (userError) {
         setError("Failed to load your blood requests");
         toast.error("Failed to load your blood requests");
       } else if (userRequests) {
-        setData(userRequests.requests || []);
+        setdata(userRequests.requests || []);
       }
     }
 
@@ -50,92 +77,126 @@ export default function RequestBlood() {
   // Load data on button change
   useEffect(() => {
     fetchData(activeButton);
-  }, [activeButton, allRequests, userRequests]);
+  }, [activeButton, allRequests, userRequests, allError, userError]);
 
-  // Render table based on active button
+  // Function to apply color based on status
+  // Function to apply color based on status
+  // Function to apply color based on status
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "In-Process":
+        return "border !border-yellow-500 text-yellow-500 bg-white rounded-full px-3 py-1 text-sm font-semibold";
+      case "Pending":
+        return "border !border-blue-500 text-blue-500 bg-white rounded-full px-3 py-1 text-sm font-semibold";
+      case "Denied":
+        return "border !border-red-500 text-red-500 bg-white rounded-full px-3 py-1 text-sm font-semibold";
+      case "Completed":
+        return "border !border-green-500 text-green-500 bg-white rounded-full px-3 py-1 text-sm font-semibold";
+      default:
+        return "border border-gray-500 text-gray-500 bg-white rounded-full px-3 py-1 text-sm font-semibold";
+    }
+  };
+
+
+  // Render Table based on active button
   const renderTable = () => {
     if (activeButton === "all") {
       return (
-        <table className="min-w-full bg-white border border-gray-300">
-          <thead>
-            <tr>
-              <th className="px-4 py-2">Blood Group</th>
-              <th className="px-4 py-2">Units</th>
-              <th className="px-4 py-2">Urgency</th>
-              <th className="px-4 py-2">Medical Reason</th>
-              <th className="px-4 py-2">Antibodies</th>
-              <th className="px-4 py-2">Hospital</th>
-              <th className="px-4 py-2">Transfusion Date</th>
-              <th className="px-4 py-2">Special Requirements</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="min-w-full bg-white border border-gray-300 table-fixed">
+          <Thead>
+            <Tr>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Blood Group</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Units</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Urgency</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Medical Reason</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Antibodies</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Hospital</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Transfusion Date</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Action</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
             {data.map((request, index) => (
-              <tr key={index}>
-                <td className="border px-4 py-2">{request.bloodGroup}</td>
-                <td className="border px-4 py-2">{request.units}</td>
-                <td className="border px-4 py-2">{request.urgency}</td>
-                <td className="border px-4 py-2">{request.medicalReason}</td>
-                <td className="border px-4 py-2">{request.antibodies}</td>
-                <td className="border px-4 py-2">
-                  {request.hospitalName} - {request.department}
-                </td>
-                <td className="border px-4 py-2">
-                  {new Date(request.transfusionDateTime).toLocaleString()}
-                </td>
-                <td className="border px-4 py-2">
-                  {request.specialRequirements.join(", ")}
-                </td>
-              </tr>
+              <Tr key={index} className="text-xs">
+                <Td className="border px-2 py-1 truncate">{request.bloodGroup}</Td>
+                <Td className="border px-2 py-1 truncate">{request.units}</Td>
+                <Td className="border px-2 py-1 truncate">{request.urgency}</Td>
+                <Td className="border px-2 py-1 truncate">{request.medicalReason}</Td>
+                <Td className="border px-2 py-1 truncate">{request.antibodies}</Td>
+                <Td className="border px-2 py-1 truncate">{request.hospitalName} - {request.department}</Td>
+                <Td className="border px-2 py-1 truncate">
+                  {request.TransfusionDateTime ? new Date(request.TransfusionDateTime).toLocaleString() : "N/A"}
+                </Td>
+
+                <Td className="border px-2 py-1 text-center">
+                  <button
+                    onClick={() => handleViewDetails(request)}
+                    className="bg-blue-500 text-white px-2 py-1 text-xs font-semibold rounded-full hover:bg-blue-600 transition duration-200"
+                  >
+                    Save A Life
+                  </button>
+                </Td>
+              </Tr>
             ))}
-          </tbody>
-        </table>
+          </Tbody>
+        </Table>
+
       );
     } else {
       return (
-        <table className="min-w-full bg-white border border-gray-300">
-          <thead>
-            <tr>
-              <th className="px-4 py-2">Patient Name</th>
-              <th className="px-4 py-2">Blood Group</th>
-              <th className="px-4 py-2">Units</th>
-              <th className="px-4 py-2">Weight</th>
-              <th className="px-4 py-2">Urgency</th>
-              <th className="px-4 py-2">Blood Component</th>
-              <th className="px-4 py-2">Hospital</th>
-              <th className="px-4 py-2">Transfusion Date</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2">Special Requirements</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="min-w-full bg-white border border-gray-300">
+          <Thead>
+            <Tr>
+              <Th className="px-4 py-2">Patient Name</Th>
+              <Th className="px-4 py-2">Blood Group</Th>
+              <Th className="px-4 py-2">Units</Th>
+              <Th className="px-4 py-2">Weight</Th>
+              <Th className="px-4 py-2">Urgency</Th>
+              <Th className="px-4 py-2">Status</Th>
+              <Th className="px-4 py-2">Action</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
             {data.map((request, index) => (
-              <tr key={index}>
-                <td className="border px-4 py-2">{request.patientName}</td>
-                <td className="border px-4 py-2">{request.bloodGroup}</td>
-                <td className="border px-4 py-2">{request.units}</td>
-                <td className="border px-4 py-2">{request.weight}</td>
-                <td className="border px-4 py-2">{request.urgency}</td>
-                <td className="border px-4 py-2">
-                  {request.bloodComponentType}
-                </td>
-                <td className="border px-4 py-2">
-                  {request.hospital.hospitalname} -{" "}
-                  {request.hospital.department}
-                </td>
-                <td className="border px-4 py-2">
-                  {new Date(request.transfusionDateTime).toLocaleString()}
-                </td>
-                <td className="border px-4 py-2">{request.status}</td>
-                <td className="border px-4 py-2">
-                  {request.specialRequirements.join(", ")}
-                </td>
-              </tr>
+              <Tr key={index}>
+                <Td className="border px-4 py-2">{request.patientName}</Td>
+                <Td className="border px-4 py-2">{request.bloodGroup}</Td>
+                <Td className="border px-4 py-2">{request.units}</Td>
+                <Td className="border px-4 py-2">{request.weight}</Td>
+                <Td className="border px-4 py-2">{request.urgency}</Td>
+                <Td className="border px-4 py-2 text-center">
+                  <span className={`${getStatusStyle(request.status)}`}>
+                    {request.status}
+                  </span>
+                </Td>
+                <Td className="border px-4 py-2 text-center space-x-4"> {/* Action Icons */}
+                  <FontAwesomeIcon
+                    icon={faEdit}
+                    className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                    onClick={() => handleEdit(request)} // Define handleEdit function
+                  />
+                  <FontAwesomeIcon
+                    icon={faTrash}
+                    className="text-red-500 hover:text-red-700 cursor-pointer"
+                    onClick={() => handleDelete(request)} // Define handleDelete function
+                  />
+                </Td>
+              </Tr>
             ))}
-          </tbody>
-        </table>
+          </Tbody>
+        </Table>
       );
     }
+  };
+
+  const handleEdit = (request) => {
+    console.log("Edit:", request);
+    // Implement your edit logic here
+  };
+
+  const handleDelete = (request) => {
+    console.log("Delete:", request);
+    // Implement your delete logic here
   };
 
   return (
@@ -143,24 +204,22 @@ export default function RequestBlood() {
       <Toaster position="top-center" reverseOrder={false} />
 
       <div className="flex justify-center mb-8">
-        <div className="p-1 bg-gray-200 rounded-full shadow-md inline-flex space-x-2">
+        <div className="p-1 bg-gray-200 rounded-full shadow-md inline-flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
           <button
             onClick={() => setActiveButton("all")}
-            className={`px-4 py-2 text-sm font-semibold transition duration-200 ${
-              activeButton === "all"
-                ? "bg-red-600 text-white rounded-full"
-                : "bg-gray-200 text-gray-700 rounded-full"
-            }`}
+            className={`px-2 py-1 md:px-4 md:py-2 text-sm font-semibold transition duration-200 ${activeButton === "all"
+              ? "bg-red-600 text-white rounded-full"
+              : "bg-gray-200 text-gray-700 rounded-full"
+              }`}
           >
             All Blood Requests
           </button>
           <button
             onClick={() => setActiveButton("your")}
-            className={`px-4 py-2 text-sm font-semibold transition duration-200 ${
-              activeButton === "your"
-                ? "bg-red-600 text-white rounded-full"
-                : "bg-gray-200 text-gray-700 rounded-full"
-            }`}
+            className={`px-2 py-1 md:px-4 md:py-2 text-sm font-semibold transition duration-200 ${activeButton === "your"
+              ? "bg-red-600 text-white rounded-full"
+              : "bg-gray-200 text-gray-700 rounded-full"
+              }`}
           >
             Your Blood Requests
           </button>
@@ -172,8 +231,11 @@ export default function RequestBlood() {
       ) : error ? (
         <div className="text-center text-red-500">{error}</div>
       ) : (
-        renderTable()
+        <div className="overflow-x-auto">
+          {renderTable()}
+        </div>
       )}
     </div>
+
   );
 }
