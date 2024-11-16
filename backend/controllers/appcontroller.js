@@ -589,7 +589,7 @@ export async function requestblood(req, res) {
             transfusionDateTime,
         });
 
-        await newRequest.save();        
+        await newRequest.save();
 
         return res.status(201).json({
             message: 'Blood request created successfully',
@@ -607,7 +607,7 @@ export async function getAllUserEmails(req, res) {
 
         // Fetch both emails and first names, excluding the specified email
         const users = await UserModel.find({ email: { $ne: email } }, 'email firstName');
-        
+
         // Map the result to extract emails and first names
         const userDetails = users.map(user => ({
             email: user.email,
@@ -652,7 +652,7 @@ export async function sendBloodRequestEmails(req, res) {
     try {
         // Get all user emails except the excluded one
         const allEmails = req.body
-        
+
         // Define email subject and message
         const subject = "Urgent Blood Donation Request";
         const message = `A blood request has been made. Details: ${JSON.stringify(requestDetails)}`;
@@ -662,7 +662,7 @@ export async function sendBloodRequestEmails(req, res) {
             sendEmail(email, subject, message)
                 .catch(err => console.log(`Failed to send email to ${email}:`, err));
         });
-        
+
         console.log("Blood request emails sent successfully.");
     } catch (error) {
         console.error("Error sending blood request emails:", error);
@@ -678,7 +678,7 @@ export async function getbloodrequestinfo(req, res) {
         }
 
         const requests = await Request.find({ email })
-            .select('-_id -createdAt -updatedAt -email -__v'); // Exclude fields
+            .select('-createdAt -updatedAt -email -__v'); // Exclude fields
 
         if (!requests || requests.length === 0) {
             return res.status(404).json({ message: 'No blood request has been made with this email.' });
@@ -724,5 +724,30 @@ export async function getAllPendingBloodRequests(req, res) {
     } catch (error) {
         console.error('Error fetching pending blood requests:', error);
         return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+
+export async function deletebloodrequest(req, res) {
+    try {
+        const { id } = req.params;
+        const bloodRequest = await Request.findOne({ id });
+
+        if (!bloodRequest) {
+            return res.status(404).json({ error: 'Blood request not found' });
+        }
+
+        if (bloodRequest.status !== 'Pending') {
+            return res.status(400).json({
+                error: 'Only requests with status "Pending" can be deleted'
+            });
+        }
+
+        await Request.deleteOne({ id });
+
+        return res.status(200).json({ message: 'Blood request deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting blood request:', error);
+        return res.status(500).json({ error: 'An error occurred while deleting the blood request' });
     }
 }

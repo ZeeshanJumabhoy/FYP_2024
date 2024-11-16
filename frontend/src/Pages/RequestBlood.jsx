@@ -15,6 +15,7 @@ export default function RequestBlood() {
     const navigate = useNavigate();
     const [{ isLoading, error, apiData }] = useFetch();
     const { email, firstName } = apiData || {}; // Destructure email and firstName
+    console.log(email);
 
     const formik = useFormik({
         initialValues: {
@@ -81,10 +82,13 @@ export default function RequestBlood() {
                 <div className="glass-form">
                     <div className="title-container">Blood Request Form</div>
 
-                    <form className="py-5" onSubmit={formik.handleSubmit}>
+                    <form className="py-1" onSubmit={formik.handleSubmit}>
+                    <div className="profile flex justify-center"></div>
                         <div className="textbox flex flex-col items-center gap-6">
 
+                        <div className="flex justify-between w-full gap-5">
                             {/* Patient Name */}
+                            {/* Blood Group */}
                             <label className="form-label" htmlFor="patientName">Patient Name</label>
                             <input
                                 {...formik.getFieldProps("patientName")}
@@ -92,8 +96,6 @@ export default function RequestBlood() {
                                 type="text"
                                 placeholder="Patient Name"
                             />
-
-                            {/* Blood Group */}
                             <label className="form-label" htmlFor="bloodGroup">Blood Group</label>
                             <select
                                 {...formik.getFieldProps("bloodGroup")}
@@ -104,8 +106,10 @@ export default function RequestBlood() {
                                     <option key={group} value={group}>{group}</option>
                                 ))}
                             </select>
+                            </div>
 
                             {/* Units and Weight */}
+                            <div className="flex justify-between w-full gap-5">
                             <label className="form-label" htmlFor="units">Units Needed</label>
                             <input
                                 {...formik.getFieldProps("units")}
@@ -123,7 +127,9 @@ export default function RequestBlood() {
                                 placeholder="Weight (kg)"
                                 min="0"
                             />
-                            {/* AntiBodies */}
+                            </div>
+
+                            {/* AntiBodies */}{/* Special Requirements */}
                             <label className="form-label" htmlFor="antibodies">Any Antibodies</label>
                             <select
                                 {...formik.getFieldProps("antibodies")}
@@ -135,7 +141,6 @@ export default function RequestBlood() {
                                 ))}
                             </select>
 
-                            {/* Special Requirements */}
                             <label className="form-label" htmlFor="specialRequirements">Special Requirements</label>
                             <div className="checkbox-group">
                                 {[
@@ -186,7 +191,9 @@ export default function RequestBlood() {
                             </div>
 
 
-                            {/* Medical Reason */}
+                            {/* Medical Reason */} 
+                            {/* Urgency */}
+                            <div className="flex justify-between w-full gap-5">
                             <label className="form-label" htmlFor="medicalReason">Medical Reason</label>
                             <select
                                 {...formik.getFieldProps("medicalReason")}
@@ -217,7 +224,6 @@ export default function RequestBlood() {
                                 />
                             )}
 
-                            {/* Urgency */}
                             <label className="form-label" htmlFor="urgency">Urgency</label>
                             <select
                                 {...formik.getFieldProps("urgency")}
@@ -227,8 +233,10 @@ export default function RequestBlood() {
                                     <option key={urgency} value={urgency}>{urgency}</option>
                                 ))}
                             </select>
+                            </div>
 
                             {/* Blood Component Type */}
+                            <div className="flex justify-between w-full gap-5">
                             <label className="form-label" htmlFor="bloodComponentType">Blood Component Type</label>
                             <select
                                 {...formik.getFieldProps("bloodComponentType")}
@@ -250,6 +258,7 @@ export default function RequestBlood() {
                                 type="text"
                                 placeholder="Allergies or reactions"
                             />
+                            </div>
 
                             {/* Hospital Information */}
                             <label className="form-label" htmlFor="hospitalName">Hospital Name</label>

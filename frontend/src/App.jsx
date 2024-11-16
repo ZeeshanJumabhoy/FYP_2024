@@ -17,6 +17,7 @@ import RequestBlood from './Pages/RequestBlood'
 import RequestBloodInfo from './Pages/RequestBloodInfo'
 import Questions from './Pages/Questions';
 import Poster from './Pages/Poster';
+import BloodRequestUpdate from './Pages/BloodRequestUpdate'
 
 // Protect Route from unauthorized access
 const ProtectRoute = ({ route, children }) => {
@@ -35,7 +36,7 @@ const ProtectRoute = ({ route, children }) => {
 const router = createBrowserRouter([
   {
     path:'/',
-    element:<Poster/>,
+    element:<Homepage/>,
   },
   {
     path: '/Username',
@@ -106,6 +107,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectRoute route="Questions">
         <Questions />
+      </ProtectRoute>
+    ),
+  },
+  {
+    path: '/BloodRequestUpdate',
+    element: (
+      <ProtectRoute route="BloodRequestUpdate">
+        <BloodRequestUpdate />
       </ProtectRoute>
     ),
   },

@@ -15,8 +15,7 @@ export default function RequestBlood() {
   const navigate = useNavigate();
   const [{ apiData, isLoading: emailLoading, error: emailError }] = useFetch();
   const { email, firstName } = apiData || {};
-  const userEmail =email;
-  console.log(userEmail);
+  const userEmail = email;
   const [activeButton, setActiveButton] = useState("all");
   const [data, setdata] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,9 +25,9 @@ export default function RequestBlood() {
   const [{ apiData: allRequests, isLoading: allLoading, error: allError }] =
     useFetch("getAllPendingBloodRequests");
 
-    const [userRequests, setUserRequests] = useState(null);
-    const [userLoading, setUserLoading] = useState(false);
-    const [userError, setUserError] = useState(null);
+  const [userRequests, setUserRequests] = useState(null);
+  const [userLoading, setUserLoading] = useState(false);
+  const [userError, setUserError] = useState(null);
 
   // Fetch user's specific blood requests
   // Replace wiTh dynamic email
@@ -147,23 +146,25 @@ export default function RequestBlood() {
         <Table className="min-w-full bg-white border border-gray-300">
           <Thead>
             <Tr>
-              <Th className="px-4 py-2">Patient Name</Th>
-              <Th className="px-4 py-2">Blood Group</Th>
-              <Th className="px-4 py-2">Units</Th>
-              <Th className="px-4 py-2">Weight</Th>
-              <Th className="px-4 py-2">Urgency</Th>
-              <Th className="px-4 py-2">Status</Th>
-              <Th className="px-4 py-2">Action</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Id</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Patient Name</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Blood Group</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Units</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Weight</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Urgency</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Status</Th>
+              <Th className="px-2 py-1 text-xs font-medium text-gray-600">Action</Th>
             </Tr>
           </Thead>
           <Tbody>
             {data.map((request, index) => (
-              <Tr key={index}>
-                <Td className="border px-4 py-2">{request.patientName}</Td>
-                <Td className="border px-4 py-2">{request.bloodGroup}</Td>
-                <Td className="border px-4 py-2">{request.units}</Td>
-                <Td className="border px-4 py-2">{request.weight}</Td>
-                <Td className="border px-4 py-2">{request.urgency}</Td>
+              <Tr key={index} className="text-xs">
+                <Td className="border px-2 py-1 truncate">{request.id}</Td>
+                <Td className="border px-2 py-1 truncate">{request.patientName}</Td>
+                <Td className="border px-2 py-1 truncate">{request.bloodGroup}</Td>
+                <Td className="border px-2 py-1 truncate">{request.units}</Td>
+                <Td className="border px-2 py-1 truncate">{request.weight}</Td>
+                <Td className="border px-2 py-1 truncate">{request.urgency}</Td>
                 <Td className="border px-4 py-2 text-center">
                   <span className={`${getStatusStyle(request.status)}`}>
                     {request.status}
@@ -173,12 +174,14 @@ export default function RequestBlood() {
                   <FontAwesomeIcon
                     icon={faEdit}
                     className="text-blue-500 hover:text-blue-700 cursor-pointer"
-                    onClick={() => handleEdit(request)} // Define handleEdit function
+                    onClick={() => handleEdit(request)} // Existing logic
+                    title="Edit"
                   />
                   <FontAwesomeIcon
                     icon={faTrash}
                     className="text-red-500 hover:text-red-700 cursor-pointer"
-                    onClick={() => handleDelete(request)} // Define handleDelete function
+                    onClick={() => handleDelete(request.id)} // Pass the custom "id"
+                    title="Delete"
                   />
                 </Td>
               </Tr>
@@ -190,14 +193,27 @@ export default function RequestBlood() {
   };
 
   const handleEdit = (request) => {
-    console.log("Edit:", request);
-    // Implement your edit logic here
+    // Navigate to the BloodRequestUpdate page with the id
+    navigate(`/BloodRequestUpdate/${request.id}`);
   };
+  
 
-  const handleDelete = (request) => {
-    console.log("Delete:", request);
-    // Implement your delete logic here
+  const handleDelete = async (id) => {
+    try {
+      const response = await axios.post(`http://localhost:8080/api/deletebloodrequest/${id}`);
+      
+      if (response.status === 200) {
+        setdata((prevData) => prevData.filter((request) => request.id !== id));
+
+        toast.success("Blood request deleted successfully!");
+      }
+    } catch (error) {
+      console.error("Error deleting blood request:", error);
+      toast.error("Failed to delete blood request. Please try again.");
+    }
   };
+  
+  
 
   return (
     <div className="container mx-auto">

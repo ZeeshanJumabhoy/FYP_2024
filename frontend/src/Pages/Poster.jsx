@@ -6,7 +6,7 @@ const Poster = ({ onConfirm }) => {
   return (
     <div className="poster-overlay">
       <div className="poster-container">
-        <img src="https://www.shutterstock.com/image-vector/blood-donation-illustration-concept-bag-600nw-2156013083.jpg" alt="Confirmation Poster" className="poster-image" />
+        <img src="uploads\app\Request Poster.png" alt="Confirmation Poster" className="poster-image" />
         <button className="confirm-button" onClick={onConfirm}>Confirm</button>
       </div>
     </div>

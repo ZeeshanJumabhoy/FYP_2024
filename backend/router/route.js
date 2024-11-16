@@ -15,6 +15,7 @@ router.route('/send-mail').post(sendMail);
 router.route('/authenticate').post(middleware.verifyUser, (req, res) => res.end());
 router.route('/login').post(controller.login);
 router.route('/requestblood').post(middleware.auth,controller.requestblood);
+router.route('/deletebloodrequest/:id').post(controller.deletebloodrequest);
  
 // GET Methods
 router.route('/user/:email').get(controller.getUser);
