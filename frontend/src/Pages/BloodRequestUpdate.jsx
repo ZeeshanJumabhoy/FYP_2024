@@ -1,77 +1,106 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { useFormik } from "formik";
 import { requestBloodValidation } from "../Helper/Validate";
-import axios from "axios";
-import { updateBloodRequest } from "../Helper/helper";
-import useFetch from '../hooks/fetch';
+import { getBloodRequestById,updateBloodRequest } from "../Helper/helper";
 import "../Styles/card.css";
-import "primereact/resources/themes/saga-blue/theme.css"; // Import PrimeReact CSS
+import "primereact/resources/themes/saga-blue/theme.css"; // PrimeReact CSS
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import "../Styles/tailwind.css";
 
 export default function BloodRequestUpdatePage() {
+    const { id } = useParams(); // Extract 'id' from the URL
     const navigate = useNavigate();
-    const [initialValues, setInitialValues] = useState(null);
-    const [{ apiData, isLoading: emailLoading, error: emailError }] = useFetch();
-    const { email } = apiData || {}; // User email from fetch
 
+    const [initialValues, setInitialValues] = useState({
+        patientName: "",
+        bloodGroup: "",
+        units: "",
+        weight: "",
+        antibodies: "",
+        specialRequirements: [],
+        medicalReason: "",
+        otherMedicalReason: "",
+        urgency: "Routine",
+        bloodComponentType: "",
+        allergiesAndReactions: "",
+        hospitalName: "",
+        department: "",
+        patientId: "",
+        transfusionDateTime: "",
+    });
+
+    // Fetch and update the blood request details
     useEffect(() => {
-        if (email) {
-            // Fetch existing blood request details
-            axios.get(`/api/getbloodrequestinfo/${email}`)
-                .then((response) => {
-                    const requestDetails = response.data;
-                    setInitialValues({
-                        patientName: requestDetails.patientName || "",
-                        bloodGroup: requestDetails.bloodGroup || "",
-                        units: requestDetails.units || "",
-                        weight: requestDetails.weight || "",
-                        antibodies: requestDetails.antibodies || "",
-                        specialRequirements: requestDetails.specialRequirements || [],
-                        medicalReason: requestDetails.medicalReason || "",
-                        otherMedicalReason: requestDetails.otherMedicalReason || "",
-                        urgency: requestDetails.urgency || "Routine",
-                        bloodComponentType: requestDetails.bloodComponentType || "",
-                        allergiesAndReactions: requestDetails.allergiesAndReactions || "",
-                        hospitalName: requestDetails.hospital?.[0]?.hospitalName || "",
-                        department: requestDetails.hospital?.[0]?.department || "",
-                        patientId: requestDetails.hospital?.[0]?.patientId || "",
-                        transfusionDateTime: requestDetails.transfusionDateTime || "",
-                    });
-                })
-                .catch((err) => {
-                    toast.error("Failed to fetch blood request details!");
+        async function fetchBloodRequest() {
+            try {
+                const { data } = await getBloodRequestById(id);
+                const {
+                    patientName,
+                    bloodGroup,
+                    units,
+                    weight,
+                    antibodies,
+                    specialRequirements,
+                    hospital,
+                    patientId,
+                    transfusionDateTime,
+                    medicalReason,
+                    otherMedicalReason,
+                    urgency,
+                    bloodComponentType
+                } = data.requests;
+
+                // Format transfusionDateTime to 'YYYY-MM-DDTHH:mm' for datetime-local input
+                const formattedDateTime = transfusionDateTime
+                    ? new Date(transfusionDateTime).toISOString().slice(0, 16)
+                    : "";
+
+                setInitialValues({
+                    patientName,
+                    bloodGroup,
+                    units,
+                    weight,
+                    antibodies,
+                    specialRequirements,
+                    medicalReason: medicalReason || "",
+                    otherMedicalReason: otherMedicalReason || "",
+                    urgency: urgency || "Routine",
+                    bloodComponentType: bloodComponentType || "",
+                    allergiesAndReactions: data.requests.allergiesAndReactions || "",
+                    hospitalName: hospital?.hospitalname || "",
+                    department: hospital?.department || "",
+                    patientId: hospital?.patientId || "",
+                    transfusionDateTime: formattedDateTime,
                 });
+            } catch (error) {
+                console.error("Error fetching blood request:", error);
+                toast.error("Failed to fetch blood request details!");
+            }
         }
-    }, [email]);
+
+        if (id) {
+            fetchBloodRequest();
+        }
+    }, [id]);
+
 
     const formik = useFormik({
-        initialValues: initialValues || {
-            patientName: "",
-            bloodGroup: "",
-            units: "",
-            weight: "",
-            antibodies: "",
-            specialRequirements: [],
-            medicalReason: "",
-            otherMedicalReason: "",
-            urgency: "Routine",
-            bloodComponentType: "",
-            allergiesAndReactions: "",
-            hospitalName: "",
-            department: "",
-            patientId: "",
-            transfusionDateTime: "",
-        },
-        enableReinitialize: true,
+        initialValues,
+        enableReinitialize: true, // Enable form values to reinitialize when `initialValues` changes
         validate: requestBloodValidation,
         validateOnBlur: false,
         validateOnChange: false,
 
         onSubmit: async (values) => {
+            const errors = requestBloodValidation(values);
+            if (Object.keys(errors).length > 0) {
+                Object.values(errors).forEach((error) => toast.error(error));
+                return;
+            }
+
             const hospitalInfo = {
                 hospitalName: values.hospitalName,
                 department: values.department,
@@ -80,9 +109,8 @@ export default function BloodRequestUpdatePage() {
 
             const { hospitalName, department, patientId, ...requestValues } = values;
             requestValues.hospital = [hospitalInfo];
-            requestValues.email = email;
 
-            const updatePromise = updateBloodRequest(requestValues);
+            const updatePromise = updateBloodRequest(id,requestValues);
 
             toast.promise(updatePromise, {
                 loading: "Updating blood request...",
@@ -96,10 +124,6 @@ export default function BloodRequestUpdatePage() {
         },
     });
 
-    if (!initialValues || emailLoading) {
-        return <div className="loading">Loading...</div>;
-    }
-
     return (
         <div className="gradient-bg">
             <Toaster position="top-center" reverseOrder={false}></Toaster>
@@ -107,7 +131,6 @@ export default function BloodRequestUpdatePage() {
             <div className="flex justify-center items-center h-full py-10">
                 <div className="glass-form">
                     <div className="title-container">Update Blood Request</div>
-
                     <form className="py-1" onSubmit={formik.handleSubmit}>
                         <div className="textbox flex flex-col items-center gap-6">
                             <div className="flex justify-between w-full gap-5">
@@ -131,7 +154,6 @@ export default function BloodRequestUpdatePage() {
                                     ))}
                                 </select>
                             </div>
-
                             <div className="flex justify-between w-full gap-5">
                                 {/* Units */}
                                 <label className="form-label" htmlFor="units">Units Needed</label>
@@ -154,6 +176,75 @@ export default function BloodRequestUpdatePage() {
                                 />
                             </div>
 
+                            {/* Medical Reason and Urgency Section */}
+                            <div className="flex flex-col w-full gap-5">
+                                <div className="flex justify-between w-full gap-5">
+                                    {/* Medical Reason */}
+                                    <label className="form-label" htmlFor="medicalReason">Medical Reason</label>
+                                    <select
+                                        {...formik.getFieldProps("medicalReason")}
+                                        className="textbox-input"
+                                        onChange={(e) => {
+                                            formik.setFieldValue("medicalReason", e.target.value);
+                                            if (e.target.value !== 'Other') {
+                                                formik.setFieldValue("otherMedicalReason", "");
+                                            }
+                                        }}
+                                    >
+                                        <option value="" disabled>Select Medical Reason</option>
+                                        {[
+                                            'Anemia', 'Trauma/Emergency Surgery', 'Elective Surgery',
+                                            'Cancer Treatment', 'Organ Transplant', 'Burn Treatment',
+                                            'Bleeding Disorder (e.g., Hemophilia)', 'Pregnancy/Childbirth Complications',
+                                            'Heart Surgery', 'Liver Disease', 'Kidney Disease',
+                                            'Neonatal Transfusion', 'Other'
+                                        ].map(reason => (
+                                            <option key={reason} value={reason}>{reason}</option>
+                                        ))}
+                                    </select>
+
+                                    {/* Specify Other Medical Reason */}
+                                    {formik.values.medicalReason === 'Other' && (
+                                        <input
+                                            {...formik.getFieldProps("otherMedicalReason")}
+                                            className="textbox-input"
+                                            type="text"
+                                            placeholder="Specify other reason"
+                                        />
+                                    )}
+                                </div>
+
+                                {/* Urgency */}
+                                <div className="flex justify-between w-full gap-5">
+                                    <label className="form-label" htmlFor="urgency">Urgency</label>
+                                    <select
+                                        {...formik.getFieldProps("urgency")}
+                                        className="textbox-input"
+                                    >
+                                        <option value="" disabled>Select Urgency</option>
+                                        {['Emergency', 'Urgent', 'Routine'].map(urgency => (
+                                            <option key={urgency} value={urgency}>{urgency}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Blood Component Type */}
+                                <div className="flex justify-between w-full gap-5">
+                                    <label className="form-label" htmlFor="bloodComponentType">Blood Component Type</label>
+                                    <select
+                                        {...formik.getFieldProps("bloodComponentType")}
+                                        className="textbox-input"
+                                    >
+                                        <option value="" disabled>Select Blood Component Type</option>
+                                        {[
+                                            'Whole Blood', 'Red Blood Cells (RBCs)', 'Platelets',
+                                            'Plasma', 'Cryoprecipitate', 'Granulocytes'
+                                        ].map(type => (
+                                            <option key={type} value={type}>{type}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
                             {/* Antibodies */}
                             <label className="form-label" htmlFor="antibodies">Any Antibodies</label>
                             <select
@@ -227,9 +318,8 @@ export default function BloodRequestUpdatePage() {
                                 type="datetime-local"
                             />
 
-                            <button className="btn" type="submit">
-                                Update Blood Request
-                            </button>
+                            {/* Submit Button */}
+                            <button type="submit" className="btn btn-primary">Update Request</button>
                         </div>
                     </form>
                 </div>

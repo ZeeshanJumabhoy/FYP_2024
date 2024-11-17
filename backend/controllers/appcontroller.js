@@ -694,8 +694,31 @@ export async function getbloodrequestinfo(req, res) {
     }
 }
 
+export async function getsinglebloodrequestinfo(req, res) {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({ error: 'ID is required' });
+        }
 
-// Function to get all pending blood requests
+        const requests = await Request.findOne({ id })
+            .select('-createdAt -updatedAt -email -__v'); // Exclude fields
+
+        if (!requests || requests.length === 0) {
+            return res.status(404).json({ message: 'No blood request has been made with this email.' });
+        }
+
+        return res.status(200).json({
+            message: 'Blood request information retrieved successfully.',
+            requests,
+        });
+    } catch (error) {
+        console.error('Error fetching blood request info:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+
 export async function getAllPendingBloodRequests(req, res) {
     try {
 
@@ -749,5 +772,46 @@ export async function deletebloodrequest(req, res) {
     } catch (error) {
         console.error('Error deleting blood request:', error);
         return res.status(500).json({ error: 'An error occurred while deleting the blood request' });
+    }
+}
+
+export async function updatebloodrequest(req, res) {
+    try {
+        const { id } = req.params; // Assuming the request ID is passed as a route parameter
+        const updates = req.body; // Fields to update
+
+        // Validation for 'Other' medical reason
+        if (updates.medicalReason === 'Other' && !updates.otherMedicalReason) {
+            return res.status(400).json({ error: 'Please provide a medical reason under "Other"' });
+        }
+
+        // Find the blood request by ID
+        const bloodRequest = await Request.findOne({ id });
+        if (!bloodRequest) {
+            return res.status(404).json({ error: 'Blood request not found' });
+        }
+
+        // Update the fields that are provided in the request body
+        Object.keys(updates).forEach((key) => {
+            // Special handling for nested objects like hospital
+            if (key === 'hospital' && Array.isArray(updates.hospital)) {
+                bloodRequest.hospital.hospitalname = updates.hospital[0]?.hospitalName || bloodRequest.hospital.hospitalname;
+                bloodRequest.hospital.department = updates.hospital[0]?.department || bloodRequest.hospital.department;
+                bloodRequest.hospital.patientId = updates.hospital[0]?.patientId || bloodRequest.hospital.patientId;
+            } else {
+                bloodRequest[key] = updates[key];
+            }
+        });
+
+        // Save the updated blood request
+        const updatedRequest = await bloodRequest.save();
+
+        return res.status(200).json({
+            message: 'Blood request updated successfully',
+            request: updatedRequest
+        });
+    } catch (error) {
+        console.error('Error updating blood request:', error);
+        return res.status(500).json({ error: 'An error occurred while updating the blood request' });
     }
 }

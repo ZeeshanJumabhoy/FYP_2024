@@ -15,13 +15,14 @@ router.route('/send-mail').post(sendMail);
 router.route('/authenticate').post(middleware.verifyUser, (req, res) => res.end());
 router.route('/login').post(controller.login);
 router.route('/requestblood').post(middleware.auth,controller.requestblood);
-router.route('/deletebloodrequest/:id').post(controller.deletebloodrequest);
+router.route('/deletebloodrequest/:id').post(middleware.auth,controller.deletebloodrequest);
  
 // GET Methods
 router.route('/user/:email').get(controller.getUser);
 router.route('/fetchuser/:id').get(controller.getfetchUser);
 router.route('/getAllUserEmails/:email').get(controller.getAllUserEmails);
 router.route('/getbloodrequestinfo/:email').get(controller.getbloodrequestinfo);
+router.route('/getsinglebloodrequestinfo/:id').get(controller.getsinglebloodrequestinfo);
 router.route('/getAllPendingBloodRequests').get(controller.getAllPendingBloodRequests);
 
 //change in this both
@@ -31,6 +32,7 @@ router.route('/create-reset-session').get(controller.createResetSession);
 
 // PUT Methods
 router.route('/update-user').put(middleware.auth, controller.updateUser);
+router.put('/updatebloodrequest/:id', middleware.auth, controller.updatebloodrequest);
 router.route('/reset-password').put(middleware.verifyUser, controller.resetPassword);
 
 export default router; 

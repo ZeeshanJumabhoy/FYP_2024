@@ -1,7 +1,7 @@
 import React from 'react'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { useAuthStore } from './Helper/store'
- 
+
 //  Import All Components and Pages
 import Homepage from './Main/Homepage'
 import Register from './Pages/Register'
@@ -35,8 +35,8 @@ const ProtectRoute = ({ route, children }) => {
 
 const router = createBrowserRouter([
   {
-    path:'/',
-    element:<Homepage/>,
+    path: '/',
+    element: <Homepage />,
   },
   {
     path: '/Username',
@@ -111,7 +111,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/BloodRequestUpdate',
+    path: '/BloodRequestUpdate/:id', // Add the dynamic 'id' parameter
     element: (
       <ProtectRoute route="BloodRequestUpdate">
         <BloodRequestUpdate />
@@ -131,4 +131,3 @@ export default function App() {
     </main>
   )
 }
- 

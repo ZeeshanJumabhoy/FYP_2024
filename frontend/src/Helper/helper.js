@@ -87,7 +87,6 @@ export async function updateUser(credentials) {
     try {
         const token = await localStorage.getItem('token');
         const { data } = await axios.put('api/update-user', credentials, { headers: { Authorization: `Bearer ${token}` } });
-
         return Promise.resolve({ data });
     } catch (err) {
         let message = err?.response?.data?.error;
@@ -218,4 +217,33 @@ export async function sendBloodRequestEmails(credentials) {
     }
 }
 
-  
+export async function getBloodRequestById(id) {
+    try {
+        const { data } = await axios.get(`/api/getsinglebloodrequestinfo/${id}`);
+        return Promise.resolve({ data });
+    } catch (error) {
+        return Promise.reject({ error: 'Failed to fetch blood request details!', details: error });
+    }
+}
+
+
+export async function updateBloodRequest(id, updatedFields) {
+    try {
+        // Get the JWT token from localStorage
+        const token = await localStorage.getItem('token');
+
+        // Send the PUT request to update the blood request
+        const { data } = await axios.put(
+            `api/updatebloodrequest/${id}`, 
+            updatedFields, 
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // Resolve the promise with the API response
+        return Promise.resolve({ data });
+    } catch (err) {
+        // Extract the error message if available
+        let message = err?.response?.data?.error;
+        return Promise.reject({ err, message });
+    }
+}
