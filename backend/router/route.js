@@ -6,8 +6,15 @@ import * as middleware from '../middleware/middleware.js';
 import sendMail from '../controllers/mailer.js'; 
 
 const router = Router();
- 
-// POST Methods  
+
+//POST FOR BLOOD BANK
+router.route('/registerbloodbank').post(controller.registerbloodbank);
+router.route('/appointmentavailblity').post(controller.appointmentavailblity);
+
+// GET METHOD FOR BLOOD BANK 
+router.route('/getbloodbank').get(controller.getbloodbank);
+
+// POST Methods FOR USER 
 router.route('/registerCheck').post(controller.registerCheck);
 router.route('/register').post(controller.register);
 router.route('/test').get((req, res) => res.status(200).send('Test route works!'));
@@ -17,7 +24,7 @@ router.route('/login').post(controller.login);
 router.route('/requestblood').post(middleware.auth,controller.requestblood);
 router.route('/deletebloodrequest/:id').post(middleware.auth,controller.deletebloodrequest);
  
-// GET Methods
+// GET Methods FOR USER
 router.route('/user/:email').get(controller.getUser);
 router.route('/fetchuser/:id').get(controller.getfetchUser);
 router.route('/getAllUserEmails/:email').get(controller.getAllUserEmails);
@@ -25,7 +32,8 @@ router.route('/getbloodrequestinfo/:email').get(controller.getbloodrequestinfo);
 router.route('/getsinglebloodrequestinfo/:id').get(controller.getsinglebloodrequestinfo);
 router.route('/getAllPendingBloodRequests').get(controller.getAllPendingBloodRequests);
 
-//change in this both
+
+//change in this both FOR ALL
 router.route('/generate-otp').get( controller.generateOTP);
 router.route('/verify-otp').get(controller.verifyOTP);
 router.route('/create-reset-session').get(controller.createResetSession);

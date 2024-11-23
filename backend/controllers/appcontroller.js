@@ -2,6 +2,8 @@ import UserModel from '../model/User.model.js';
 import Family from '../model/Family.model.js';
 import Request from '../model/Request.model.js';
 import Corporate from '../model/Corporate.model.js';
+import BloodBank from '../model/Bloodbank.model.js'; // Import the BloodBank model
+import Availability from '../model/BloodBankAvailability.model.js'; // Assuming this is the schema file
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
@@ -815,3 +817,167 @@ export async function updatebloodrequest(req, res) {
         return res.status(500).json({ error: 'An error occurred while updating the blood request' });
     }
 }
+
+export async function registerbloodbank(req, res) {
+    try {
+        // Extract data from the request body
+        const {
+            name,
+            address,
+            city,
+            state,
+            latitude,
+            longitude,
+            phoneNumber,
+            contactEmail,
+            bloodBankCode, // Custom code provided by the user
+        } = req.body;
+
+        // Validate required fields
+        if (
+            !name ||
+            !latitude ||
+            !longitude ||
+            !phoneNumber ||
+            !contactEmail ||
+            !bloodBankCode
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing required fields: name, latitude, longitude, phoneNumber, contactEmail, and bloodBankCode are mandatory.",
+            });
+        }
+
+        // Check if contactEmail is unique
+        const existingBloodBank = await BloodBank.findOne({ contactEmail });
+        if (existingBloodBank) {
+            return res.status(400).json({
+                success: false,
+                message: `A blood bank with the email ${contactEmail} already exists.`,
+            });
+        }
+
+        // Check if bloodBankCode is unique
+        const existingBloodBankCode = await BloodBank.findOne({ bloodBankCode });
+        if (existingBloodBankCode) {
+            return res.status(400).json({
+                success: false,
+                message: `A blood bank with the code ${bloodBankCode} already exists.`,
+            });
+        }
+
+        // Create a new BloodBank document
+        const bloodBank = new BloodBank({
+            name,
+            address,
+            city,
+            state,
+            latitude,
+            longitude,
+            phoneNumber,
+            contactEmail,
+            bloodBankCode,
+        });
+
+        // Save the blood bank to the database
+        const savedBloodBank = await bloodBank.save();
+
+        // Respond with the saved data, including the generated bloodBankId
+        return res.status(201).json({
+            success: true,
+            message: "Blood bank registered successfully!",
+            data: savedBloodBank,
+        });
+    } catch (error) {
+        console.error("Error registering blood bank:", error);
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while registering the blood bank.",
+            error: error.message,
+        });
+    }
+}
+
+
+export async function getbloodbank(req, res) {
+    try {
+        // Fetch all blood banks and select only specific fields to return
+        const bloodBanks = await BloodBank.find({}, "name address city state latitude longitude phoneNumber contactEmail");
+
+        // Check if any blood banks exist
+        if (!bloodBanks || bloodBanks.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No blood banks found.",
+            });
+        }
+
+        // Respond with just the data array (simplified for the frontend)
+        return res.status(200).json(bloodBanks);
+    } catch (error) {
+        console.error("Error fetching blood banks:", error);
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while fetching blood banks.",
+            error: error.message,
+        });
+    }
+}
+
+export async function appointmentavailblity(req, res) {
+    try {
+        const { bloodBankCode, schedule } = req.body;
+        const bloodBankId = bloodBankCode;
+        // Validate required fields
+        if (!bloodBankCode || !schedule) {
+            return res.status(400).json({
+                success: false,
+                message: "BloodBankCode and schedule are required.",
+            });
+        }
+
+        // Validate bloodBankCode format
+        const isValidCode = /^[A-Z]{2}\d+$/.test(bloodBankCode);
+        if (!isValidCode) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Invalid blood bank code. It must follow the format like BB1, HB4, etc.",
+            });
+        }
+        // Check if the blood bank exists
+        const bloodBankExists = await BloodBank.findOne({ bloodBankId });
+        if (!bloodBankExists) {
+            return res.status(404).json({
+                success: false,
+                message: "Blood bank with the provided code does not exist.",
+            });
+        }
+        // Upsert the availability
+        const availability = await Availability.findOneAndUpdate(
+            { bloodBankCode }, // Find by bloodBankCode
+            { bloodBankCode, schedule }, // Update or set new values
+            {
+                upsert: true, // Insert if not found
+                new: true, // Return the updated or created document
+                runValidators: true, // Validate schema rules
+            }
+        );
+        // Respond with the created/updated document
+        return res.status(200).json({
+            success: true,
+            message: "Blood bank availability registered successfully.",
+            data: availability,
+        });
+    } catch (error) {
+        console.error("Error in appointmentavailability:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+            error: error.message,
+        });
+    }
+}
+
+
+

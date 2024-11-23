@@ -1,0 +1,98 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.schedule {
+  margin: 20px 0;
+}
+
+.day-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.day-row label {
+  width: 100px;
+}
+
+.time-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  flex-grow: 1;
+}
+
+.time-row.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.time-block {
+  width: 60px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.time-block.active {
+  background: #4caf50;
+  color: white;
+  border-color: #4caf50;
+}
+
+.appointments-per-day {
+  margin: 20px 0;
+}
+
+.appointments-per-day label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+input[type="range"] {
+  flex-grow: 1;
+}
+
+.slider-value {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.submit-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background: #0056b3;
+}

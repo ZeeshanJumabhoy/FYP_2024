@@ -16,8 +16,10 @@ import RegisterOTP from './Pages/RegisterOTP'
 import RequestBlood from './Pages/RequestBlood'
 import RequestBloodInfo from './Pages/RequestBloodInfo'
 import Questions from './Pages/Questions';
-import Poster from './Pages/Poster';
+import Poster from './Main/Poster';
+import BookAppointment from './Pages/BookAppointment'
 import BloodRequestUpdate from './Pages/BloodRequestUpdate'
+import Timseslotavailiblity from './Pages/Timeslotavailiblity'
 
 // Protect Route from unauthorized access
 const ProtectRoute = ({ route, children }) => {
@@ -36,7 +38,7 @@ const ProtectRoute = ({ route, children }) => {
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Homepage />,
+    element: <Timseslotavailiblity />,
   },
   {
     path: '/Username',
@@ -115,6 +117,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectRoute route="BloodRequestUpdate">
         <BloodRequestUpdate />
+      </ProtectRoute>
+    ),
+  },
+  {
+    path: '/timeslot', // Add the dynamic 'id' parameter
+    element: (
+      <ProtectRoute route="timeslot">
+        <timeslot/>
       </ProtectRoute>
     ),
   },

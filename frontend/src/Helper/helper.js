@@ -247,3 +247,34 @@ export async function updateBloodRequest(id, updatedFields) {
         return Promise.reject({ err, message });
     }
 }
+
+export async function getBloodBank() {
+    try {
+        const { data } = await axios.get(`/api/getbloodbank`);
+        return Promise.resolve({ data });
+    } catch (error) {
+        return Promise.reject({ error: 'Failed to fetch blood request details!', details: error });
+    }
+}
+
+export async function appointmentavailability(credentials) {
+    try {
+
+        // Make the API call to save the appointment availability
+        const { status, data } = await axios.post("api/appointmentavailblity", credentials);
+
+        if (status === 200 || status === 201) {
+            console.log("Availability successfully registered:", data);
+
+            return Promise.resolve({ status, message: "Schedule successfully submitted." });
+        } else {
+            throw new Error("Failed to submit schedule.");
+        }
+    } catch (err) {
+        console.error("Error while submitting schedule:", err.message);
+
+        // Extract a meaningful error message if available
+        let message = err?.response?.data?.message || "An error occurred while submitting schedule.";
+        return Promise.reject({ err, message });
+    }
+}
