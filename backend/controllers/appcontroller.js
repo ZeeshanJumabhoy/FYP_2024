@@ -902,7 +902,7 @@ export async function registerbloodbank(req, res) {
 export async function getbloodbank(req, res) {
     try {
         // Fetch all blood banks and select only specific fields to return
-        const bloodBanks = await BloodBank.find({}, "name address city state latitude longitude phoneNumber contactEmail");
+        const bloodBanks = await BloodBank.find({}, "name address city state bloodBankId phoneNumber contactEmail");
 
         // Check if any blood banks exist
         if (!bloodBanks || bloodBanks.length === 0) {
@@ -979,5 +979,74 @@ export async function appointmentavailblity(req, res) {
     }
 }
 
+export async function getappointmentschedule(req, res) {
+    try {
+        const { bloodBankCode, day } = req.query;
 
+        // Validate required parameters
+        if (!bloodBankCode || !day) {
+            return res.status(400).json({
+                success: false,
+                message: "BloodBankCode and day are required.",
+            });
+        }
 
+        // Validate bloodBankCode format
+        const isValidCode = /^[A-Z]{2}\d+$/.test(bloodBankCode);
+        if (!isValidCode) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Invalid blood bank code. It must follow the format like BB1, HB4, etc.",
+            });
+        }
+
+        // Validate day
+        const validDays = [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        ];
+        if (!validDays.includes(day)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid day. It must be a valid weekday.",
+            });
+        }
+
+        // Find the availability for the blood bank and day
+        const availability = await Availability.findOne(
+            { bloodBankCode, "schedule.day": day },
+            { "schedule.$": 1 } // Project only the matching schedule array
+        );
+
+        if (!availability) {
+            return res.status(404).json({
+                success: false,
+                message: "No availability found for the provided blood bank and day.",
+            });
+        }
+
+        // Extract the timeSlots array
+        const timeSlots = availability.schedule[0]?.timeSlots || [];
+
+        // Respond with only the timeSlots
+        return res.status(200).json({
+            success: true,
+            message: "Availability details retrieved successfully.",
+            data: { timeSlots },
+        });
+    } catch (error) {
+        console.error("Error in getappointmentschedule:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+            error: error.message,
+        });
+    }
+}
+ 

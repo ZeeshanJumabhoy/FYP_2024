@@ -8,11 +8,12 @@ import sendMail from '../controllers/mailer.js';
 const router = Router();
 
 //POST FOR BLOOD BANK
-router.route('/registerbloodbank').post(controller.registerbloodbank);
-router.route('/appointmentavailblity').post(controller.appointmentavailblity);
+router.route('/registerbloodbank').post(controller.registerbloodbank); //Admin work
+router.route('/appointmentavailblity').post(controller.appointmentavailblity); //Blood Bank does 
 
 // GET METHOD FOR BLOOD BANK 
-router.route('/getbloodbank').get(controller.getbloodbank);
+router.route('/getbloodbank').get(controller.getbloodbank); //User Does
+router.route('/getappointmentdetails').get(controller.getappointmentschedule); //User Does
 
 // POST Methods FOR USER 
 router.route('/registerCheck').post(controller.registerCheck);

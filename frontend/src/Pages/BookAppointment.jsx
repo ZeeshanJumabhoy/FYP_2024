@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { getBloodBank } from "../Helper/helper";
 import Poster from "../Main/Poster";
 import "../Styles/BookAppointment.css";
@@ -6,6 +7,7 @@ import "../Styles/BookAppointment.css";
 import { provinceData, cityData } from "../Helper/location"; // Import state and city data
 
 const BookAppointment = () => {
+  const navigate = useNavigate();
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [bloodBanks, setBloodBanks] = useState([]);
   const [filteredBanks, setFilteredBanks] = useState([]);
@@ -27,6 +29,10 @@ const BookAppointment = () => {
     localStorage.setItem("isConfirmed", "true");
     setIsConfirmed(true);
     fetchBloodBanks(); // Fetch blood bank data on confirmation
+  };
+
+  const handleBookAppointment = (bloodBankId) => {
+    navigate("/AppointmentAvailabilityDetails", { state: { bloodBankId } }); // Pass bloodBankId as state
   };
 
   const fetchBloodBanks = async () => {
@@ -141,7 +147,13 @@ const BookAppointment = () => {
                       </a>
                     </p>
 
-                    <button className="book-appointment-button">Book Appointment</button>
+                    {/* Add onClick to log bloodBankId */}
+                    <button
+                      className="book-appointment-button"
+                      onClick={() => handleBookAppointment(bank.bloodBankId)} // Navigate with bloodBankId
+                    >
+                      Book Appointment
+                    </button>
                     <hr className="card-divider" />
                     <p>
                       📞 {bank.phoneNumber} <br />

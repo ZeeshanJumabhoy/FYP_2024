@@ -17,9 +17,15 @@ import RequestBlood from './Pages/RequestBlood'
 import RequestBloodInfo from './Pages/RequestBloodInfo'
 import Questions from './Pages/Questions';
 import Poster from './Main/Poster';
-import BookAppointment from './Pages/BookAppointment'
-import BloodRequestUpdate from './Pages/BloodRequestUpdate'
-import Timseslotavailiblity from './Pages/Timeslotavailiblity'
+import BookAppointment from './Pages/BookAppointment';
+import BloodRequestUpdate from './Pages/BloodRequestUpdate';
+import Timeslotavailiblity from './Pages/timeslotavailiblity';
+import BloodBankDashboard from './Pages/BloodBankDashboard';
+import ContactUsPage from './Pages/ContactUsPage';
+import { FaDashcube } from 'react-icons/fa';
+import EducationalPage from './Pages/EducationalPage';
+import FAQSection from './Main/FAQSection';
+import AppointmentAvailabilityDetails from './Pages/AppointmentAvailblityDetails'
 
 // Protect Route from unauthorized access
 const ProtectRoute = ({ route, children }) => {
@@ -38,8 +44,12 @@ const ProtectRoute = ({ route, children }) => {
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Timseslotavailiblity />,
+    element: <BookAppointment/>,
   },
+  {
+    path: '/AppointmentAvailabilityDetails',
+    element: <AppointmentAvailabilityDetails/>,
+  } ,
   {
     path: '/Username',
     element: <Username />,
