@@ -48,7 +48,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/AppointmentAvailabilityDetails',
-    element: <AppointmentAvailabilityDetails/>,
+    element: <AppointmentAvailabilityDetails/>
   } ,
   {
     path: '/Username',

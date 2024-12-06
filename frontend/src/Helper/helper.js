@@ -279,40 +279,6 @@ export async function appointmentavailability(credentials) {
     }
 }
 
-export async function getappointmentschedule(credentials) {
-    const { bloodBankCode, day } = credentials;
-
-    try {
-        // Validate input in the client (optional but good practice)
-        if (!bloodBankCode || !day) {
-            throw new Error("BloodBankCode and day are required.");
-        }
-
-        // Construct the query parameters
-        const queryParams = new URLSearchParams({ bloodBankCode, day });
-
-        // Make the API request
-        const response = await fetch(`/api/getappointmentschedule?${queryParams}`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-
-        // Check for server errors
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Failed to fetch data");
-        }
-
-        // Parse JSON response
-        const data = await response.json();
-        return data; // Returns the timeSlots or error details
-    } catch (error) {
-        console.error("Error in getappointmentschedule:", error.message);
-        throw error; // Re-throw the error to handle in the calling code
-    }
-}
 
 export async function getAppointmentSchedule({ bloodBankId, day }) {
     try {
