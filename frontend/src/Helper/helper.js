@@ -149,7 +149,7 @@ export async function requestblood(credentials) {
         const { status, data } = await axios.post('api/requestblood', filteredCredentials, {
             headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         if (status === 201) {
             let message = 'Your Blood Request is Underway – We are Here to Help';
             const mailData = {
@@ -197,7 +197,7 @@ export async function sendBloodRequestEmails(credentials) {
             transfusionDateTime,
             hospitalName,// Get first hospital object if available
         };
-        
+
         for (const user of users) {
             const mailData = {
                 username: user.firstName, // Use the first name from the response
@@ -210,7 +210,7 @@ export async function sendBloodRequestEmails(credentials) {
             // Send email to each user
             await axios.post('/api/send-mail', mailData);
         }
-        
+
         console.log('Emails sent to all users successfully.');
     } catch (error) {
         console.error('Error sending emails:', error);
@@ -234,8 +234,8 @@ export async function updateBloodRequest(id, updatedFields) {
 
         // Send the PUT request to update the blood request
         const { data } = await axios.put(
-            `api/updatebloodrequest/${id}`, 
-            updatedFields, 
+            `api/updatebloodrequest/${id}`,
+            updatedFields,
             { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -295,5 +295,101 @@ export async function getAppointmentSchedule({ bloodBankId, day }) {
             error: "Failed to fetch appointment schedule!",
             details: error?.response?.data || error.message,
         });
+    }
+}
+
+export async function bookappointment(credentials) {
+    try {
+        // Get token from local storage for authorization
+        const token = await localStorage.getItem('token');
+
+        // Send the POST request to the backend API for booking the appointment
+        const response = await axios.post('/api/bookappointment', credentials, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Extract status and data from the response
+        const { status, data } = response;
+
+        const {
+            bloodBankName,
+            timeslot, // Ensure this is accessed correctly
+            date,
+            day,
+        } = credentials;
+
+        const emailDetails = {
+            bloodBankName,
+            timeslot,
+            date,
+            day,
+        };
+
+        // Handle the response if the booking is successful
+        if (status === 201) {
+            let message = 'Your appointment is successfully booked!';
+            const mailData = {
+                username: credentials.firstName, // First name for email (if needed)
+                userEmail: credentials.email,
+                subject: message,
+                mailType: 'appointmentconfirmation',
+                ...emailDetails,
+            };
+
+            // Send a confirmation email (assuming you have an email API set up)
+            await axios.post('/api/send-mail', mailData);
+
+            // Resolve the promise with status and data
+            return Promise.resolve({ status, data });
+        } else {
+            throw new Error('Booking failed. Please try again.');
+        }
+    } catch (err) {
+        // Handle any errors from the API request
+        const message = err?.response?.data?.error || err.message;
+        return Promise.reject({ error: err, message });
+    }
+}
+
+
+export async function getappointmentdetails(email) {
+    try {
+        // Make the API request to fetch appointment details by email
+        const { data } = await axios.get(`/api/getappointmentdetails/${email}`);
+        console.log(data);
+        // Return the data if the request is successful
+        return Promise.resolve({ data });
+        
+    } catch (error) {
+        // Return an error message if the request fails
+        return Promise.reject({ error: 'Failed to fetch appointment details!', details: error });
+    }
+}
+
+export async function getAppointmentDetailsByBloodBank(bloodBankId) {
+    try {
+        // Make the API request to fetch appointments by blood bank ID
+        const { data } = await axios.get(`/api/getappointmentdetailsbybloodbank/${bloodBankId}`);
+        console.log('Appointments:', data);
+        // Return the data if the request is successful
+        return Promise.resolve(data);
+    } catch (error) {
+        console.error('Error fetching appointments by Blood Bank ID:', error);
+        // Return an error message if the request fails
+        return Promise.reject({ error: 'Failed to fetch appointment details!', details: error });
+    }
+}
+
+export async function updateAppointmentStatus(email, status) {
+    try {
+        // Make the API request to update the appointment status
+        const { data } = await axios.put('/api/updateAppointmentStatus', { email, status });
+        console.log('Updated Appointment:', data);
+        // Return the data if the request is successful
+        return Promise.resolve(data);
+    } catch (error) {
+        console.error('Error updating appointment status:', error);
+        // Return an error message if the request fails
+        return Promise.reject({ error: 'Failed to update appointment status!', details: error });
     }
 }

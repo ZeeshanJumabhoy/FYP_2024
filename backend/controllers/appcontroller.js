@@ -4,6 +4,7 @@ import Request from '../model/Request.model.js';
 import Corporate from '../model/Corporate.model.js';
 import BloodBank from '../model/Bloodbank.model.js'; // Import the BloodBank model
 import Availability from '../model/BloodBankAvailability.model.js'; // Assuming this is the schema file
+import Appointment from '../model/Appointment.model.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
@@ -1049,4 +1050,139 @@ export async function getappointmentschedule(req, res) {
         });
     }
 }
- 
+
+export async function bookappointment(req, res) {
+    try {
+        // Destructuring the necessary fields from the request body
+        const {
+            firstName,
+            email,
+            phoneNumber,
+            bloodBankName,
+            bloodBankId,
+            timeslot,
+            date,
+            day,
+        } = req.body;
+
+        // Validate the data (you can add more validations as needed)
+        if (!firstName || !email || !phoneNumber || !bloodBankName || !bloodBankId || !timeslot || !date || !day) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        // Check if there is an existing appointment with the same email and status is null
+        const existingAppointment = await Appointment.findOne({ email });
+        if (existingAppointment && existingAppointment.status === null) {
+            return res.status(400).json({
+                message: 'An appointment already exists for this email with a pending status.'
+            });
+        }
+
+        // Create a new appointment instance
+        const newAppointment = new Appointment({
+            firstName,
+            email,
+            phoneNumber,
+            bloodBankName,
+            bloodBankId,
+            timeslot,
+            date,
+            day,
+        });
+
+        // Save the new appointment to the database
+        await newAppointment.save();
+
+        // Return a success response
+        return res.status(201).json({
+            message: 'Appointment booked successfully',
+            appointment: newAppointment,
+        });
+    } catch (error) {
+        console.error('Error booking appointment:', error);
+        return res.status(500).json({ message: 'Failed to book appointment', error: error.message });
+    }
+}
+
+export async function getappointmentdetails(req, res) {
+    try {
+        const { email } = req.params;
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        const appointments = await Appointment.find({ email })
+            .select('-__v -createdAt -updatedAt -_id -phoneNumber -bloodBankId');
+
+        if (!appointments || appointments.length === 0) {
+            return res.status(404).json({ message: 'No appointments found for this email.' });
+        }
+        return res.status(200).json({
+            appointments
+        });
+    } catch (error) {
+        console.error('Error fetching appointment details:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+export async function getappointmentdetailsbybloodbank(req, res) {
+    try {
+        const { bloodBankId } = req.params; // Ensure `bloodBankId` is retrieved from `params`
+        if (!bloodBankId) {
+            return res.status(400).json({ error: 'Blood Bank ID is required' });
+        }
+
+        // Query to find appointments with matching bloodBankId and status null
+        const appointments = await Appointment.find({
+            bloodBankId,
+            status: null // Fetch only appointments where status is null
+        })
+            .select('-__v -createdAt -updatedAt -_id -bloodBankId'); // Exclude sensitive fields
+
+        if (!appointments || appointments.length === 0) {
+            return res.status(404).json({ message: 'No appointments found for your Blood Bank' });
+        }
+
+        return res.status(200).json({
+            appointments,
+        });
+    } catch (error) {
+        console.error('Error fetching appointment details:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+
+export async function updateAppointmentStatus(req, res) {
+    try {
+        const { email, status } = req.body;
+
+        if (!email || !status) {
+            return res.status(400).json({ error: 'Email and status are required.' });
+        }
+
+        const validStatuses = ['Appear', 'Not-Appear', null];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: 'Invalid status value. Allowed values are "Appear", "Not-Appear", or null.' });
+        }
+
+        const updatedAppointment = await Appointment.findOneAndUpdate(
+            { email },
+            { status },
+            { new: true }
+        );
+
+        if (!updatedAppointment) {
+            return res.status(404).json({ error: 'Appointment not found for the provided email.' });
+        }
+
+        res.status(200).json({
+            message: 'Appointment status updated successfully.',
+            appointment: updatedAppointment,
+        });
+    } catch (error) {
+        console.error('Error updating appointment status:', error);
+        res.status(500).json({ error: 'An internal server error occurred.' });
+    }
+}

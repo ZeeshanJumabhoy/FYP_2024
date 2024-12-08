@@ -7,6 +7,9 @@ import sendMail from '../controllers/mailer.js';
 
 const router = Router();
 
+//PUT FOR BLOOD BANK
+router.route('/updateAppointmentStatus').put(controller.updateAppointmentStatus);
+
 //POST FOR BLOOD BANK
 router.route('/registerbloodbank').post(controller.registerbloodbank); //Admin work
 router.route('/appointmentavailblity').post(controller.appointmentavailblity); //Blood Bank does 
@@ -14,6 +17,7 @@ router.route('/appointmentavailblity').post(controller.appointmentavailblity); /
 // GET METHOD FOR BLOOD BANK 
 router.route('/getbloodbank').get(controller.getbloodbank); //User Does
 router.route('/getappointmentdetails').get(controller.getappointmentschedule); //User Does
+router.route('/getappointmentdetailsbybloodbank/:bloodBankId').get(controller.getappointmentdetailsbybloodbank);//Blood Bank does
 
 // POST Methods FOR USER 
 router.route('/registerCheck').post(controller.registerCheck);
@@ -24,6 +28,8 @@ router.route('/authenticate').post(middleware.verifyUser, (req, res) => res.end(
 router.route('/login').post(controller.login);
 router.route('/requestblood').post(middleware.auth,controller.requestblood);
 router.route('/deletebloodrequest/:id').post(middleware.auth,controller.deletebloodrequest);
+router.route('/bookappointment').post(middleware.auth,controller.bookappointment);
+
  
 // GET Methods FOR USER
 router.route('/user/:email').get(controller.getUser);
@@ -32,7 +38,7 @@ router.route('/getAllUserEmails/:email').get(controller.getAllUserEmails);
 router.route('/getbloodrequestinfo/:email').get(controller.getbloodrequestinfo);
 router.route('/getsinglebloodrequestinfo/:id').get(controller.getsinglebloodrequestinfo);
 router.route('/getAllPendingBloodRequests').get(controller.getAllPendingBloodRequests);
-
+router.route('/getappointmentdetails/:email').get(controller.getappointmentdetails);
 
 //change in this both FOR ALL
 router.route('/generate-otp').get( controller.generateOTP);

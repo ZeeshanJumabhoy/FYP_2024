@@ -25,7 +25,9 @@ import ContactUsPage from './Pages/ContactUsPage';
 import { FaDashcube } from 'react-icons/fa';
 import EducationalPage from './Pages/EducationalPage';
 import FAQSection from './Main/FAQSection';
-import AppointmentAvailabilityDetails from './Pages/AppointmentAvailblityDetails'
+import AppointmentAvailabilityDetails from './Pages/AppointmentAvailblityDetails';
+import UserAppointmentStatusPage from './Pages/UserAppointmentStatusPage';
+import AppointmentRequestsManage from './Pages/AppointmentRequestManage'
 
 // Protect Route from unauthorized access
 const ProtectRoute = ({ route, children }) => {
@@ -44,7 +46,7 @@ const ProtectRoute = ({ route, children }) => {
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <BookAppointment/>,
+    element: <AppointmentRequestsManage/>,
   },
   {
     path: '/AppointmentAvailabilityDetails',
@@ -135,6 +137,22 @@ const router = createBrowserRouter([
     element: (
       <ProtectRoute route="timeslot">
         <timeslot/>
+      </ProtectRoute>
+    ),
+  },
+  {
+    path: '/BookAppointment', // Add the dynamic 'id' parameter
+    element: (
+      <ProtectRoute route="BookAppointment">
+        <BookAppointment/>
+      </ProtectRoute>
+    ),
+  },
+  {
+    path: '/UserAppointmentStatusPage', // Add the dynamic 'id' parameter
+    element: (
+      <ProtectRoute route="UserAppointmentStatusPage">
+        <UserAppointmentStatusPage/>
       </ProtectRoute>
     ),
   },

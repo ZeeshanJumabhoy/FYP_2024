@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { getAppointmentSchedule } from "../Helper/helper";
+import { getAppointmentSchedule,bookappointment } from "../Helper/helper";
+import { toast } from "react-toastify";
+import useFetch from '../hooks/fetch';
 import "../Styles/button.css";
 import { Table, Thead, Tbody, Tr, Th, Td } from "react-super-responsive-table";
 import "react-super-responsive-table/dist/SuperResponsiveTableStyle.css";
 import 'font-awesome/css/font-awesome.min.css';
+import { ToastContainer } from "react-toastify";
 
 const AppointmentAvailabilityDetails = () => {
+    const [{ isLoading, apiData }] = useFetch();
+    const { firstName, phoneNumber, email } = apiData || {};
     const location = useLocation();
-    const { bloodBankId } = location.state || {};
+    const { bloodBankId, bloodBankName } = location.state || {};
 
     const currentDate = new Date();
     const currentDay = currentDate.toLocaleDateString("en-US", { weekday: "long" });
@@ -16,8 +21,10 @@ const AppointmentAvailabilityDetails = () => {
 
     const [appointmentData, setAppointmentData] = useState(null);
     const [error, setError] = useState(null);
+    const [displayDate, setDisplayDate] = useState(date);
     const [selectedDay, setSelectedDay] = useState(currentDay);
     const [selectedSlot, setSelectedSlot] = useState(null);
+    const [showTooltip, setShowTooltip] = useState(false); // Tooltip visibility state
 
     useEffect(() => {
         if (bloodBankId && selectedDay) {
@@ -27,9 +34,7 @@ const AppointmentAvailabilityDetails = () => {
             const fetchData = async () => {
                 try {
                     const response = await getAppointmentSchedule({ bloodBankId, day: selectedDay });
-                    console.log(response);
                     const processedData = processAppointmentData(response.data);
-                    console.log(processedData);
                     setAppointmentData(processedData);
                 } catch (err) {
                     setError(err.error || "Failed to fetch appointment schedule");
@@ -71,11 +76,56 @@ const AppointmentAvailabilityDetails = () => {
     };
 
     const handleDayChange = (event) => {
-        setSelectedDay(event.target.value);
+        const dayName = event.target.value;
+        setSelectedDay(dayName);
+
+        // Calculate next week's date for the selected day
+        const nextDate = getNextWeekDate(dayName);
+        setDisplayDate(nextDate.toLocaleDateString("en-US"));
+    };
+
+    const getNextWeekDate = (dayName) => {
+        const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const selectedDayIndex = daysOfWeek.indexOf(dayName);
+        const currentDayIndex = currentDate.getDay();
+
+        const daysUntilNext = (selectedDayIndex - currentDayIndex + 7) % 7 || 7; // Ensure it's next week
+        const nextDate = new Date(currentDate);
+        nextDate.setDate(currentDate.getDate() + daysUntilNext);
+
+        return nextDate;
     };
 
     const handleSelect = (index) => {
         setSelectedSlot(index);
+        setShowTooltip(false); // Hide tooltip on valid selection
+    };
+
+    const handleSubmit = async() => {
+        if (selectedSlot === null) {
+            setShowTooltip(true); // Show tooltip when Submit is clicked without a selection
+        } else {
+            const appointmentDetails = {
+                firstName,
+                email,
+                phoneNumber,
+                bloodBankName,
+                bloodBankId,
+                timeslot: appointmentData[selectedSlot]?.time, // Safely access with optional chaining
+                date: displayDate,
+                day: selectedDay
+            };
+            try {
+                const response = await bookappointment(appointmentDetails);
+                if (response.status === 201) {
+                    toast.success("Appointment booked successfully!"); // Success toast
+                } else {
+                    toast.error("An error occurred. Please try again."); // Error toast
+                }
+            } catch (error) {
+                toast.error(error.message || "An error occurred. Please try again.");
+            }
+        }
     };
 
     const styles = {
@@ -83,6 +133,11 @@ const AppointmentAvailabilityDetails = () => {
             maxWidth: '800px',
             margin: '0 auto',
             textAlign: 'center',
+        },
+        tooltip: {
+            color: "red",
+            fontSize: "0.9rem",
+            marginTop: "4px",
         },
         heading: {
             fontSize: '1.5rem',
@@ -144,10 +199,12 @@ const AppointmentAvailabilityDetails = () => {
     return (
         <div>
             <div className="bg-blue-50 w-full px-4 py-8" style={{ textAlign: "center" }}>
+                <ToastContainer position="top-center" reverseOrder={false}/>
                 <h1 className="text-4xl font-bold text-red-600 mb-4">Pre Appointment Availability</h1>
                 <h2 className="text-2xl font-bold text-green-600 mb-4">
-                    Day & Date: {`${currentDay} ${date}`}
+                    Day & Date: {`${selectedDay} ${displayDate}`}
                 </h2>
+                <h3 className="text-2xl font-bold text-green-600 mb-4">{bloodBankName}</h3>
             </div>
 
             <div className="flex flex-col items-center justify-center gap-6 mt-6 px-4">
@@ -230,7 +287,29 @@ const AppointmentAvailabilityDetails = () => {
                             ))}
                         </Tbody>
                     </Table>
-
+                    <div className="flex justify-end items-center mt-6 gap-4">
+                        <button
+                            onClick={() => console.log("Back button clicked")}
+                            className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded"
+                        >
+                            Back
+                        </button>
+                        <div className="flex flex-col items-center">
+                            <button
+                                onClick={handleSubmit}
+                                disabled={selectedSlot === null} // Check explicitly for null
+                                className={`${selectedSlot !== null
+                                    ? "bg-blue-500 hover:bg-blue-600"
+                                    : "bg-gray-300 cursor-not-allowed"
+                                    } text-white font-bold py-2 px-6 rounded`}
+                            >
+                                Submit
+                            </button>
+                            {showTooltip && selectedSlot === null && (
+                                <div style={styles.tooltip}>First select the time slot!</div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

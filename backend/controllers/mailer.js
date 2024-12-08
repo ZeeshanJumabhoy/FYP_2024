@@ -26,7 +26,12 @@ export default async function sendMail(req, res) {
             medicalReason,
             transfusionDateTime,
             hospitalName,
-            otp
+            otp,
+            bloodBankName,
+            timeslot,
+            date,
+            day
+
         } = req.body;
 
         const fromAddress = `Blood Safe Life 🩸 <${process.env.EMAIL}>`;
@@ -42,7 +47,11 @@ export default async function sendMail(req, res) {
             medicalReason,
             transfusionDateTime,
             hospitalName,
-            otp
+            otp,
+            bloodBankName,
+            timeslot,
+            date,
+            day
         });
 
         const email = {

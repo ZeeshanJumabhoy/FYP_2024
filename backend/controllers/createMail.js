@@ -8,6 +8,8 @@ export default function createMail(type, args) {
             return getBloodRequestMailTemplate(args);
         case 'interestbloodgiving':
             return sendBloodRequestEmails(args);
+        case 'appointmentconfirmation':
+            return appointmentconfirmation(args);
         default:
             return null;
     }
@@ -288,3 +290,55 @@ function sendBloodRequestEmails(args) {
     </html>
     `;
 }
+
+function appointmentconfirmation(args) {
+    const { username, bloodBankName, timeslot, date, day } = args;
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { font-family: 'Open Sans', sans-serif; background-color: #f9f9f9; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+            .header { background-color: #ff4d4d; color: #fff; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+            .header h1 { margin: 0; font-size: 24px; }
+            .content { padding: 20px; }
+            .content p { font-size: 16px; line-height: 1.6; }
+            .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            .table th, .table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+            .table th { background-color: #f2f2f2; font-weight: bold; }
+            .cta { margin-top: 20px; text-align: center; }
+            .cta a { background-color: #ff4d4d; color: #fff; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-size: 16px; }
+            .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Blood Donation Appointment Confirmed</h1>
+            </div>
+            <div class="content">
+                <p>Dear ${username},</p>
+                <p>Thank you for your generous commitment to donating blood. Your appointment has been successfully scheduled. Your donation can save lives, and we truly appreciate your compassion.</p>
+                <table class="table">
+                    <tr><th>Blood Bank Name</th><td>${bloodBankName}</td></tr>
+                    <tr><th>Appointment Date</th><td>${date}, ${day}</td></tr>
+                    <tr><th>Time Slot</th><td>${timeslot}</td></tr>
+                </table>
+                <div class="cta">
+                    <p>If you need to make any changes or have questions, please don’t hesitate to reach out.</p>
+                    <a href="https://yourappointmentlink.com" target="_blank">Manage Your Appointment</a>
+                </div>
+            </div>
+            <div class="footer">
+                <p>Thank you for making a difference in someone’s life. Together, we’re saving lives.</p>
+                <p>Contact us at: BloodSafeLife.help@gmail.com</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+}
+

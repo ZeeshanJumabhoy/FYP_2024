@@ -31,8 +31,8 @@ const BookAppointment = () => {
     fetchBloodBanks(); // Fetch blood bank data on confirmation
   };
 
-  const handleBookAppointment = (bloodBankId) => {
-    navigate("/AppointmentAvailabilityDetails", { state: { bloodBankId } }); // Pass bloodBankId as state
+  const handleBookAppointment = (bloodBankId, bloodBankName) => {
+    navigate("/AppointmentAvailabilityDetails", { state: { bloodBankId, bloodBankName } }); // Pass bloodBankId as state
   };
 
   const fetchBloodBanks = async () => {
@@ -150,7 +150,7 @@ const BookAppointment = () => {
                     {/* Add onClick to log bloodBankId */}
                     <button
                       className="book-appointment-button"
-                      onClick={() => handleBookAppointment(bank.bloodBankId)} // Navigate with bloodBankId
+                      onClick={() => handleBookAppointment(bank.bloodBankId, bank.name)} // Navigate with bloodBankId
                     >
                       Book Appointment
                     </button>
