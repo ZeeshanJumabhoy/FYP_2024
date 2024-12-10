@@ -2,9 +2,11 @@ import UserModel from '../model/User.model.js';
 import Family from '../model/Family.model.js';
 import Request from '../model/Request.model.js';
 import Corporate from '../model/Corporate.model.js';
-import BloodBank from '../model/Bloodbank.model.js'; // Import the BloodBank model
+import BloodBank from '../model/Bloodbank.model.js';
 import Availability from '../model/BloodBankAvailability.model.js'; // Assuming this is the schema file
 import Appointment from '../model/Appointment.model.js';
+import Inventory from '../model/BloodBankInventory.model.js';
+import BloodCampaign from '../model/Campaign.model.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
@@ -1186,3 +1188,298 @@ export async function updateAppointmentStatus(req, res) {
         res.status(500).json({ error: 'An internal server error occurred.' });
     }
 }
+
+export async function addinventory(req, res) {
+    try {
+        const { bloodBankId, bloodBankName, inventory } = req.body;
+
+        // Validate the input
+        if (!bloodBankId || !bloodBankName || !Array.isArray(inventory)) {
+            return res.status(400).json({ message: "Invalid input data" });
+        }
+
+        // Check if the bloodBankId exists in the BloodBank database
+        const bloodBank = await BloodBank.findOne({ bloodBankId });
+        if (!bloodBank) {
+            return res.status(404).json({ message: "Blood bank not found" });
+        }
+
+        // Check if the inventory already exists for the bloodBankId
+        const existingInventory = await Inventory.findOne({ bloodBankId });
+
+        if (existingInventory) {
+            // Update existing inventory
+            existingInventory.inventory = inventory;
+            await existingInventory.save();
+
+            return res.status(200).json({
+                message: "Inventory updated successfully",
+                data: existingInventory,
+            });
+        } else {
+            // Create a new inventory record
+            const newInventory = new Inventory({
+                bloodBankName,
+                bloodBankId,
+                inventory,
+            });
+
+            await newInventory.save();
+
+            return res.status(201).json({
+                message: "Inventory added successfully",
+                data: newInventory,
+            });
+        }
+    } catch (error) {
+        console.error("Error handling inventory:", error);
+        return res.status(500).json({
+            message: "Internal server error",
+            error: error.message,
+        });
+    }
+}
+
+export async function getinventory(req, res) {
+    try {
+        const { bloodBankId } = req.params;
+
+        // Validate bloodBankId
+        if (!bloodBankId) {
+            return res.status(400).json({ message: "Blood bank ID is required" });
+        }
+
+        // Fetch inventory for the given bloodBankId
+        const inventory = await Inventory.findOne({ bloodBankId });
+
+        if (!inventory) {
+            return res.status(404).json({ message: "Inventory not found for the specified blood bank" });
+        }
+
+        return res.status(200).json({
+            message: "Inventory retrieved successfully",
+            data: inventory,
+        });
+    } catch (error) {
+        console.error("Error fetching inventory:", error);
+        return res.status(500).json({
+            message: "Internal server error",
+            error: error.message,
+        });
+    }
+}
+
+export async function addcampaign(req, res) {
+    try {
+        const { bloodBankId, bloodBankName, startDateTime, endDateTime, venue, contactDetails } = req.body;
+
+        // Check if the blood bank exists in the database
+        const bloodBank = await BloodBank.findOne({ bloodBankId });
+        if (!bloodBank) {
+            return res.status(404).json({
+                success: false,
+                message: 'Blood Bank not found. Please provide a valid bloodBankId.',
+            });
+        }
+
+        // Validate that the provided bloodBankName matches the name in the database
+        if (bloodBank.name !== bloodBankName) {
+            return res.status(400).json({
+                success: false,
+                message: 'The blood bank name does not match the provided bloodBankId.',
+            });
+        }
+
+        // Check if a campaign with the same venue and startDateTime exists
+        const existingCampaign = await BloodCampaign.findOne({
+            bloodBankId,
+            'venue.name': venue.name,
+            'venue.street': venue.street,
+            'venue.city': venue.city,
+            'venue.state': venue.state,
+            startDateTime,
+        });
+
+        if (existingCampaign) {
+            // Update the existing campaign if startDateTime matches
+            existingCampaign.endDateTime = endDateTime;
+            existingCampaign.contactDetails = contactDetails;
+
+            await existingCampaign.save();
+
+            return res.status(200).json({
+                success: true,
+                message: 'Existing campaign updated successfully!',
+                campaign: existingCampaign,
+            });
+        }
+
+        // Check if a campaign exists with the same venue but a different startDateTime
+        const campaignWithSameVenue = await BloodCampaign.findOne({
+            bloodBankId,
+            'venue.name': venue.name,
+            'venue.street': venue.street,
+            'venue.city': venue.city,
+            'venue.state': venue.state,
+        });
+
+        if (campaignWithSameVenue) {
+            // Allow new campaign to be created since startDateTime differs
+            console.log('A campaign with the same venue but different startDateTime exists. Creating a new campaign.');
+        }
+
+        // Validate startDateTime and endDateTime
+        if (new Date(startDateTime) <= new Date()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Start date and time must be in the future.',
+            });
+        }
+
+        if (new Date(endDateTime) <= new Date(startDateTime)) {
+            return res.status(400).json({
+                success: false,
+                message: 'End date and time must be later than start date and time.',
+            });
+        }
+
+        // Create a new campaign
+        const newCampaign = new BloodCampaign({
+            bloodBankId,
+            bloodBankName,
+            startDateTime,
+            endDateTime,
+            venue,
+            contactDetails,
+        });
+
+        const savedCampaign = await newCampaign.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Blood campaign created successfully!',
+            campaign: savedCampaign,
+        });
+    } catch (error) {
+        console.error('Error creating or updating blood campaign:', error);
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while processing the blood campaign.',
+            error: error.message,
+        });
+    }
+}
+
+export async function deleteCampaign(req, res) {
+    try {
+        const { bloodBankId, bloodBankName, venue } = req.body;
+
+        // Validate request input
+        if (!bloodBankId || !bloodBankName || !venue) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide bloodBankId, bloodBankName, and complete venue details.',
+            });
+        }
+
+        // Check if the campaign exists with the provided details
+        const campaign = await BloodCampaign.findOne({
+            bloodBankId,
+            bloodBankName,
+            'venue.name': venue.name,
+            'venue.street': venue.street,
+            'venue.city': venue.city,
+            'venue.state': venue.state,
+        });
+
+        if (!campaign) {
+            return res.status(404).json({
+                success: false,
+                message: 'Campaign not found. Please check the details and try again.',
+            });
+        }
+
+        // Delete the campaign
+        await BloodCampaign.deleteOne({ _id: campaign._id });
+
+        res.status(200).json({
+            success: true,
+            message: 'Campaign deleted successfully.',
+        });
+    } catch (error) {
+        console.error('Error deleting campaign:', error);
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while deleting the campaign.',
+            error: error.message,
+        });
+    }
+}
+
+export async function getCampaign(req, res) {
+    try {
+        // Retrieve all campaigns
+        const campaigns = await BloodCampaign.find();
+
+        // Check if campaigns exist
+        if (!campaigns || campaigns.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No campaigns found.',
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Campaigns retrieved successfully.',
+            campaigns,
+        });
+    } catch (error) {
+        console.error('Error retrieving campaigns:', error);
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while retrieving campaigns.',
+            error: error.message,
+        });
+    }
+}
+
+export async function getCampaignByBloodBank(req, res) {
+    try {
+        const { bloodBankId } = req.params;
+
+        // Validate input
+        if (!bloodBankId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide a bloodBankId.',
+            });
+        }
+
+        // Find campaigns by bloodBankId
+        const campaigns = await BloodCampaign.find({ bloodBankId });
+
+        // Check if campaigns exist for the given bloodBankId
+        if (!campaigns || campaigns.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: `No campaigns found for BloodBankId: ${bloodBankId}.`,
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Campaigns retrieved successfully for the specified blood bank.',
+            campaigns,
+        });
+    } catch (error) {
+        console.error('Error retrieving campaigns for blood bank:', error);
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while retrieving campaigns for the blood bank.',
+            error: error.message,
+        });
+    }
+}
+
+

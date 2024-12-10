@@ -58,7 +58,7 @@ function Navbar() {
               <Link to="/help">Help</Link>
             </li>
 
-            <Link to="/register">
+            <Link to="/family-register">
               <button className="btn">Register</button>
             </Link>
             <Link to="/username">

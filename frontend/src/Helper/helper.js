@@ -359,7 +359,7 @@ export async function getappointmentdetails(email) {
         console.log(data);
         // Return the data if the request is successful
         return Promise.resolve({ data });
-        
+
     } catch (error) {
         // Return an error message if the request fails
         return Promise.reject({ error: 'Failed to fetch appointment details!', details: error });
@@ -370,7 +370,6 @@ export async function getAppointmentDetailsByBloodBank(bloodBankId) {
     try {
         // Make the API request to fetch appointments by blood bank ID
         const { data } = await axios.get(`/api/getappointmentdetailsbybloodbank/${bloodBankId}`);
-        console.log('Appointments:', data);
         // Return the data if the request is successful
         return Promise.resolve(data);
     } catch (error) {
@@ -393,3 +392,62 @@ export async function updateAppointmentStatus(email, status) {
         return Promise.reject({ error: 'Failed to update appointment status!', details: error });
     }
 }
+
+
+export async function getinventory(bloodBankId) {
+    try {
+        const bloodBankCode = bloodBankId;
+        if (!bloodBankCode) {
+            throw new Error("BloodBankCode and day are required.");
+        }
+        const { data } = await axios.get(`/api/getinventory/${bloodBankId}`);
+        return Promise.resolve({ data });
+    } catch (error) {
+        return Promise.reject({
+            error: "Failed to fetch Blood Bank Inventory!",
+            details: error?.response?.data || error.message,
+        });
+    }
+}
+
+
+export async function getcampaign() {
+    try {
+        const { data } = await axios.get(`/api/getcampaign`);
+        return Promise.resolve({ data });
+    } catch (error) {
+        return Promise.reject({
+            error: "Failed to fetch Campagign Details!",
+            details: error?.response?.data || error.message,
+        });
+    }
+}
+
+export async function getcampaignbybloodbank(params) {
+    try {
+
+    }
+    catch {
+
+    }
+}
+
+export async function addinventory(credentials) {
+    try {
+        // Destructuring the necessary fields from the credentials object
+        const { bloodBankId, bloodBankName, inventory } = credentials;
+
+        // Validate the data
+        if (!bloodBankId || !bloodBankName || !Array.isArray(inventory) || inventory.length === 0) {
+            return { message: 'Invalid input data' };
+        }
+
+        const { data } = await axios.post('/api/addinventory', credentials);
+        return Promise.resolve({ data });
+
+    } catch (error) {
+        console.error('Error adding inventory:', error);
+        return { message: error.message || 'Error occurred' }; // Return error message
+    }
+}
+

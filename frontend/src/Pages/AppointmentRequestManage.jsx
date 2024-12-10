@@ -13,7 +13,6 @@ function AppointmentRequestsManage() {
         async function fetchAppointments() {
             try {
                 const data = await getAppointmentDetailsByBloodBank(bloodBankId);
-                console.log("Fetched Appointments:", data);
                 setRequests(data.appointments || []); // Set the fetched data
             } catch (error) {
                 console.error("Error fetching appointments:", error);
@@ -84,14 +83,14 @@ function AppointmentRequestsManage() {
                                 <Td className="py-2 px-2">{request.date}</Td>
                                 <Td className="py-2 px-2 text-center">
                                     <button
-                                        onClick={() => handleAction(request.id, 'Approved')}
+                                        onClick={() => handleAction(request.id, 'Appear')}
                                         className="mr-2 text-green-600 hover:text-green-800 focus:outline-none"
                                         style={{ fontSize: '20px', padding: '5px 10px' }}
                                         title="Approve">
                                         ✅
                                     </button>
                                     <button
-                                        onClick={() => handleAction(request.id, 'Rejected')}
+                                        onClick={() => handleAction(request.id, 'Not-Appear')}
                                         className="text-red-600 hover:text-red-800 focus:outline-none"
                                         style={{ fontSize: '20px', padding: '5px 10px' }}
                                         title="Reject">

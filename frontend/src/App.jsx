@@ -28,6 +28,10 @@ import FAQSection from './Main/FAQSection';
 import AppointmentAvailabilityDetails from './Pages/AppointmentAvailblityDetails';
 import UserAppointmentStatusPage from './Pages/UserAppointmentStatusPage';
 import AppointmentRequestsManage from './Pages/AppointmentRequestManage'
+import BloodBankInventory from './Pages/BloodBankInventory'
+import ViewBloodInventory from './Pages/ViewBloodInventory'
+import ViewCampaign from './Pages/ViewCampaign'
+import BloodInventoryManage from './Pages/BloodInventoryManage'
 
 // Protect Route from unauthorized access
 const ProtectRoute = ({ route, children }) => {
@@ -46,12 +50,16 @@ const ProtectRoute = ({ route, children }) => {
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <AppointmentRequestsManage/>,
+    element: <BloodInventoryManage/>,
   },
   {
     path: '/AppointmentAvailabilityDetails',
     element: <AppointmentAvailabilityDetails/>
   } ,
+  {
+    path: '/ViewBloodInventory',
+    element: <ViewBloodInventory/>
+  },
   {
     path: '/Username',
     element: <Username />,

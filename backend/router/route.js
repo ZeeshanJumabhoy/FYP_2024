@@ -9,15 +9,21 @@ const router = Router();
 
 //PUT FOR BLOOD BANK
 router.route('/updateAppointmentStatus').put(controller.updateAppointmentStatus);
+router.route('/deletecampaign').delete(controller.deleteCampaign);//Blood Bank Does
 
 //POST FOR BLOOD BANK
 router.route('/registerbloodbank').post(controller.registerbloodbank); //Admin work
 router.route('/appointmentavailblity').post(controller.appointmentavailblity); //Blood Bank does 
+router.route('/addinventory').post(controller.addinventory);//Blood Bank Does
+router.route('/addcampaign').post(controller.addcampaign);//Blood Bank Does
 
 // GET METHOD FOR BLOOD BANK 
 router.route('/getbloodbank').get(controller.getbloodbank); //User Does
 router.route('/getappointmentdetails').get(controller.getappointmentschedule); //User Does
 router.route('/getappointmentdetailsbybloodbank/:bloodBankId').get(controller.getappointmentdetailsbybloodbank);//Blood Bank does
+router.route('/getinventory/:bloodBankId').get(controller.getinventory);//Blood Bank Does
+router.route('/getcampaign').get(controller.getCampaign);
+router.route('/getcampaignByBloodBank/:bloodBankId').get(controller.getCampaignByBloodBank);
 
 // POST Methods FOR USER 
 router.route('/registerCheck').post(controller.registerCheck);
