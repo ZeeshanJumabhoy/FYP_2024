@@ -410,7 +410,6 @@ export async function getinventory(bloodBankId) {
     }
 }
 
-
 export async function getcampaign() {
     try {
         const { data } = await axios.get(`/api/getcampaign`);
@@ -423,12 +422,19 @@ export async function getcampaign() {
     }
 }
 
-export async function getcampaignbybloodbank(params) {
+export async function getcampaignbybloodbank(bloodBankId) {
     try {
-
-    }
-    catch {
-
+        const bloodBankCode = bloodBankId;
+        if (!bloodBankCode) {
+            throw new Error("BloodBankCode and day are required.");
+        }
+        const { data } = await axios.get(`/api/getcampaignByBloodBank/${bloodBankId}`);
+        return Promise.resolve({ data });
+    } catch (error) {
+        return Promise.reject({
+            error: "Failed to fetch Campagign Details!",
+            details: error?.response?.data || error.message,
+        });
     }
 }
 
@@ -451,3 +457,30 @@ export async function addinventory(credentials) {
     }
 }
 
+export async function addCampaign(credentials) {
+    try {
+        const { startDateTime, endDateTime, venue, contactDetails } = credentials;
+
+        // Validate the data
+        if (!startDateTime || !endDateTime || !venue || !contactDetails || !venue.name || !venue.street || !venue.city || !venue.state || !contactDetails.contactPerson || !contactDetails.phone) {
+            return { message: 'Invalid input data. Please provide all required fields.' };
+        }
+        // Sending the request to the API to add the campaign
+        const { data} = await axios.post('/api/addcampaign', credentials);
+        return data.message;
+
+    } catch (error) {
+        console.error('Error adding campaign:', error);
+        return { message: error.message || 'Error occurred' }; // Return error message
+    }
+}
+
+
+export async function deletecampaign(credentials) {
+    try {
+
+    }
+    catch {
+
+    }
+}

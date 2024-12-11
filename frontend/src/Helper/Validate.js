@@ -356,7 +356,7 @@ export function checkEligibility(error = {}, values = {}) {
     // Check Eligibility Confirmation
     if (
         answers?.pregnant === "Yes" ||
-        answers?.weight === "Yes" ||
+        answers?.weight === "underweight" ||
         answers?.medicalExam === "No" ||
         answers?.confirmation === "No"
     ) {

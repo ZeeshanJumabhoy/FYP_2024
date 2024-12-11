@@ -63,11 +63,11 @@ export default function Register() {
         error: (err) => {
           return err.message || "Could not register!";
         },
-      });      
+      });
 
       registerPromise.catch((err) => {
         toast.error(err.message || "Something went wrong!");
-      });      
+      });
     },
   });
 
@@ -91,11 +91,15 @@ export default function Register() {
   };
 
   return (
-    <div className="gradient-bg">
+    <div className="min-h-screen px-4" style={{ background: "linear-gradient(to bottom, #8B0000, black)" }}>
       <Toaster position="top-center" reverseOrder={false}></Toaster>
+      {/* Hero Image */}
+      <div className="mb-1 mt-0">
+        <img src={campaign} alt="Blood Donation Hero" className="w-full h-40 object-cover rounded-lg shadow-md" />
+      </div>
 
-      <div className="flex justify-center items-center h-full py-10">
-        <div className="glass-form">
+      <div className="flex justify-center items-center max-w-100% mx-auto bg-white rounded-lg p-8 ">
+        <div>
           <div className="title-container">Register As Individual Donor</div>
           <div className="title flex flex-col items-center">
             <span className="py-1 text-lg w-2/3 text-center text-black">
@@ -163,7 +167,7 @@ export default function Register() {
                   maxLength={15}
                 />
               </div>
-                  {/* Email & Username*/}
+              {/* Email & Username*/}
               <div className="flex justify-between w-full gap-5">
                 <label className="form-label" htmlFor="email">
                   Email
@@ -267,7 +271,7 @@ export default function Register() {
                 </select>
               </div>
 
-                  {/* District & Postal Code*/}
+              {/* District & Postal Code*/}
               <div className="flex justify-between w-full gap-5">
                 <label className="form-label">District</label>
                 <select
@@ -310,7 +314,7 @@ export default function Register() {
                   placeholder="Last Donation (Year)"
                 />
               </div>
-              
+
               <button className="btn" type="submit">
                 Register
               </button>

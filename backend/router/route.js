@@ -11,6 +11,8 @@ const router = Router();
 router.route('/updateAppointmentStatus').put(controller.updateAppointmentStatus);
 router.route('/deletecampaign').delete(controller.deleteCampaign);//Blood Bank Does
 
+
+
 //POST FOR BLOOD BANK
 router.route('/registerbloodbank').post(controller.registerbloodbank); //Admin work
 router.route('/appointmentavailblity').post(controller.appointmentavailblity); //Blood Bank does 
@@ -34,7 +36,7 @@ router.route('/authenticate').post(middleware.verifyUser, (req, res) => res.end(
 router.route('/login').post(controller.login);
 router.route('/requestblood').post(middleware.auth,controller.requestblood);
 router.route('/deletebloodrequest/:id').post(middleware.auth,controller.deletebloodrequest);
-router.route('/bookappointment').post(middleware.auth,controller.bookappointment);
+router.route('/bookappointment').post(controller.bookappointment);
 
  
 // GET Methods FOR USER

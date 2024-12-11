@@ -47,6 +47,7 @@
         "sass": "^1.80.4",
         "styled-components": "^6.1.13",
         "web-vitals": "^2.1.4",
+        "yup": "^1.5.0",
         "zustand": "^4.4.2"
     },
     "devDependencies": {

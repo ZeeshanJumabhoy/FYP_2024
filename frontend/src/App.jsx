@@ -32,6 +32,7 @@ import BloodBankInventory from './Pages/BloodBankInventory'
 import ViewBloodInventory from './Pages/ViewBloodInventory'
 import ViewCampaign from './Pages/ViewCampaign'
 import BloodInventoryManage from './Pages/BloodInventoryManage'
+import ManageCampaign from './Pages/ManageCampaign'
 
 // Protect Route from unauthorized access
 const ProtectRoute = ({ route, children }) => {
@@ -50,7 +51,7 @@ const ProtectRoute = ({ route, children }) => {
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <BloodInventoryManage/>,
+    element: <ManageCampaign/>,
   },
   {
     path: '/AppointmentAvailabilityDetails',

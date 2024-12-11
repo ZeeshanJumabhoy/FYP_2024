@@ -6,7 +6,7 @@ import "react-super-responsive-table/dist/SuperResponsiveTableStyle.css";
 
 function AppointmentRequestsManage() {
     const [requests, setRequests] = useState([]);
-    const bloodBankId = "BB8"; // Replace with the actual blood bank ID
+    const bloodBankId = "BB6"; // Replace with the actual blood bank ID
 
     // Fetch appointment details on component mount
     useEffect(() => {

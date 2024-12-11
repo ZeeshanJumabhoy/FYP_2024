@@ -32,7 +32,7 @@ const Questions = () => {
     ],
     eligibility: [
       { question: "Are you pregnant or have you been pregnant in the last 6 months?", options: ["Yes", "No"], name: "pregnant" },
-      { question: "Are you underweight or overweight?", options: ["Yes", "No"], name: "weight" },
+      { question: "Are you underweight or overweight?", options: ["underweisght", "overweight"], name: "weight" },
       { question: "Have you ever donated blood before?", options: ["Yes", "No"], name: "bloodDonor" },
       { question: "Would you be willing to undergo a medical exam?", options: ["Yes", "No"], name: "medicalExam" },
       { question: "Please confirm all information is accurate.", options: ["Yes, I confirm", "No"], name: "confirmation" },

@@ -1273,7 +1273,6 @@ export async function addcampaign(req, res) {
     try {
         const { bloodBankId, bloodBankName, startDateTime, endDateTime, venue, contactDetails } = req.body;
 
-        // Check if the blood bank exists in the database
         const bloodBank = await BloodBank.findOne({ bloodBankId });
         if (!bloodBank) {
             return res.status(404).json({
@@ -1282,7 +1281,6 @@ export async function addcampaign(req, res) {
             });
         }
 
-        // Validate that the provided bloodBankName matches the name in the database
         if (bloodBank.name !== bloodBankName) {
             return res.status(400).json({
                 success: false,
@@ -1290,7 +1288,6 @@ export async function addcampaign(req, res) {
             });
         }
 
-        // Check if a campaign with the same venue and startDateTime exists
         const existingCampaign = await BloodCampaign.findOne({
             bloodBankId,
             'venue.name': venue.name,
@@ -1301,7 +1298,6 @@ export async function addcampaign(req, res) {
         });
 
         if (existingCampaign) {
-            // Update the existing campaign if startDateTime matches
             existingCampaign.endDateTime = endDateTime;
             existingCampaign.contactDetails = contactDetails;
 
@@ -1314,7 +1310,6 @@ export async function addcampaign(req, res) {
             });
         }
 
-        // Check if a campaign exists with the same venue but a different startDateTime
         const campaignWithSameVenue = await BloodCampaign.findOne({
             bloodBankId,
             'venue.name': venue.name,
@@ -1324,11 +1319,9 @@ export async function addcampaign(req, res) {
         });
 
         if (campaignWithSameVenue) {
-            // Allow new campaign to be created since startDateTime differs
             console.log('A campaign with the same venue but different startDateTime exists. Creating a new campaign.');
         }
 
-        // Validate startDateTime and endDateTime
         if (new Date(startDateTime) <= new Date()) {
             return res.status(400).json({
                 success: false,
@@ -1343,7 +1336,6 @@ export async function addcampaign(req, res) {
             });
         }
 
-        // Create a new campaign
         const newCampaign = new BloodCampaign({
             bloodBankId,
             bloodBankName,
@@ -1355,16 +1347,44 @@ export async function addcampaign(req, res) {
 
         const savedCampaign = await newCampaign.save();
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: 'Blood campaign created successfully!',
             campaign: savedCampaign,
         });
     } catch (error) {
         console.error('Error creating or updating blood campaign:', error);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: 'An error occurred while processing the blood campaign.',
+            error: error.message,
+        });
+    }
+}
+
+export async function getCampaign(req, res) {
+    try {
+        // Retrieve all campaigns
+        const campaigns = await BloodCampaign.find();
+
+        // Check if campaigns exist
+        if (!campaigns || campaigns.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No campaigns found.',
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Campaigns retrieved successfully.',
+            campaigns,
+        });
+    } catch (error) {
+        console.error('Error retrieving campaigns:', error);
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while retrieving campaigns.',
             error: error.message,
         });
     }
@@ -1411,34 +1431,6 @@ export async function deleteCampaign(req, res) {
         res.status(500).json({
             success: false,
             message: 'An error occurred while deleting the campaign.',
-            error: error.message,
-        });
-    }
-}
-
-export async function getCampaign(req, res) {
-    try {
-        // Retrieve all campaigns
-        const campaigns = await BloodCampaign.find();
-
-        // Check if campaigns exist
-        if (!campaigns || campaigns.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'No campaigns found.',
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: 'Campaigns retrieved successfully.',
-            campaigns,
-        });
-    } catch (error) {
-        console.error('Error retrieving campaigns:', error);
-        res.status(500).json({
-            success: false,
-            message: 'An error occurred while retrieving campaigns.',
             error: error.message,
         });
     }

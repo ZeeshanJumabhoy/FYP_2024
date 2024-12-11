@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { useFormik } from 'formik';
+import campaign from "/uploads/app/registration.jpg?url";
 import { Password } from 'primereact/password'; // Import Password from PrimeReact
 import { registerValidation } from '../Helper/Validate';
 import { register, registerverify } from '../Helper/helper';
@@ -120,11 +121,15 @@ export default function Register() {
   };
 
   return (
-    <div className="gradient-bg">
+    <div className="min-h-screen px-4" style={{ background: "linear-gradient(to bottom, #8B0000, black)" }}>
       <Toaster position="top-center" reverseOrder={false}></Toaster>
+      {/* Hero Image */}
+      <div className="mb-1 mt-0">
+        <img src={campaign} alt="Blood Donation Hero" className="w-full h-40 object-cover rounded-lg shadow-md" />
+      </div>
 
-      <div className="flex justify-center items-center h-full py-10">
-        <div className="glass-form">
+      <div className="flex justify-center items-center max-w-100% mx-auto bg-white rounded-lg p-8 ">
+        <div>
           <div className="title-container">
             Register As Family Group Donor
           </div>

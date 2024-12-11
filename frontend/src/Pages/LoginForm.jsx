@@ -7,7 +7,7 @@ import { useAuthStore } from "../Helper/store";
 import { login } from "../Helper/helper";
 import login1 from "/uploads/app/login.png?url";
 
-export default function Password() {
+export default function LoginForm() {
   const { username } = useAuthStore((state) => state.auth); // Get the stored username
   const navigate = useNavigate();
 
