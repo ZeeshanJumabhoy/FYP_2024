@@ -467,6 +467,7 @@ export async function addCampaign(credentials) {
         }
         // Sending the request to the API to add the campaign
         const { data} = await axios.post('/api/addcampaign', credentials);
+        console.log(data.message);
         return data.message;
 
     } catch (error) {
@@ -476,11 +477,13 @@ export async function addCampaign(credentials) {
 }
 
 
-export async function deletecampaign(credentials) {
+export async function deleteCampaign(credentials) {
     try {
-
-    }
-    catch {
-
+        console.log(credentials);
+        const { data } = await axios.post('/api/deleteCampaign', credentials);
+        return data.message;
+    } catch (error) {
+        console.error('Error in deleteCampaignHelper:', error);
+        throw error;
     }
 }

@@ -6,10 +6,12 @@ import { FaHeartbeat, FaFileMedical, FaUserShield, FaCheckCircle } from 'react-i
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { checkEligibility } from "../Helper/Validate";
+import { useNavigate } from "react-router-dom";
 
 const Questions = () => {
   const [responses, setResponses] = useState({});
   const [showError, setShowError] = useState({});
+  const navigate =useNavigate();
 
   const questions = {
     generalHealth: [
@@ -62,19 +64,22 @@ const Questions = () => {
 
     if (Object.keys(unanswered).length > 0) {
       setShowError(unanswered);
-      toast.error("Please answer all questions.", { position: toast.POSITION.TOP_CENTER });
+      toast.error("Please answer all questions.", { position: toast.POSITION });
       return;
     }
 
     // Check eligibility
     const eligibilityResult = checkEligibility({}, responses);
+    console.log(responses);
 
     if (eligibilityResult === true) {
-      toast.success("You are now proceeding with the Book Appointment", { position: toast.POSITION.TOP_CENTER });
+
+      toast.success("You are now proceeding with the Book Appointment", { position: toast.POSITION});
+      navigate('/BookAppointment');
     } else {
       // Display specific ineligibility reason
       const errorMessages = Object.values(eligibilityResult).join(" ");
-      toast.error(`Sorry, you are not currently eligible for Blood Donation. ${errorMessages}`, { position: toast.POSITION.TOP_CENTER });
+      toast.error(`Sorry, you are not currently eligible for Blood Donation. ${errorMessages}`, { position: toast.POSITION });
     }
   };
 

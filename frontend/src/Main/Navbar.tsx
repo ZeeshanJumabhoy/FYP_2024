@@ -11,6 +11,8 @@ function Navbar() {
     width: 0,
     height: 0,
   });
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
   useEffect(() => {
     const handleResize = () => {
       setSize({
@@ -33,6 +35,10 @@ function Navbar() {
     setMenuOpen((p) => !p);
   };
 
+  const dropdownToggleHandler = () => {
+    setDropdownOpen((p) => !p);
+  };
+
   return (
     <header className="header">
       <div className="header__content">
@@ -46,20 +52,23 @@ function Navbar() {
         >
           <ul>
             <li>
-              <Link to="/">Home</Link>
+              <Link to="/Homepage">Home</Link>
             </li>
             <li>
-              <Link to="/profile">Profile</Link>
+              <Link to="/EducationalPage">Education</Link>
             </li>
             <li>
-              <Link to="/Works">Browse Works</Link>
+              <Link to="/ContactUsPage">Contact Us</Link>
             </li>
             <li>
-              <Link to="/help">Help</Link>
+              <Link to="/">About</Link>
             </li>
 
+            <Link to="/register">
+              <button className="btn">Indivisual Register</button>
+            </Link>
             <Link to="/family-register">
-              <button className="btn">Register</button>
+              <button className="btn">Family Register</button>
             </Link>
             <Link to="/username">
               <button className="btn btn__login">Login</button>

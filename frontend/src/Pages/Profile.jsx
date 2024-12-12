@@ -105,8 +105,6 @@ export default function Register() {
       <Toaster position="top-center" reverseOrder={false}>
       </Toaster>
 
-
-
       <div className="flex justify-center items-center h-full py-10">
         <div className="glass-form">
           <div className="title flex flex-col items-center">

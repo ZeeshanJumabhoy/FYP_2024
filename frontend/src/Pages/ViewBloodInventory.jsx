@@ -92,6 +92,59 @@ const ViewBloodInventory = () => {
           </table>
         </div>
       </div>
+      <footer className="padding_4x footer-bg">
+        <div className="flex">
+          <section className="flex-content padding_1x">
+            <h3>Save Life</h3>
+            <a href="register.html">Donate Blood</a>
+            <a href="register.html">Request Blood</a>
+            <a href="find_bloodbank.html">Find Blood Bank</a>
+            <a href="find_hospital.html">Find Hospital</a>
+            <a href="find_camp.html">Find Blood Camp</a>
+            <a href="find_lab.html">Find Labs</a>
+          </section>
+          <section className="flex-content padding_1x">
+            <h3>Register</h3>
+            <a href="signin.html">Donor Signup</a>
+            <a href="add_bloodbank.html">Blood Bank Sign Up</a>
+            <a href="add_hospital.html">Hospital Sign Up</a>
+            <a href="add_lab.html"> Lab Sign Up</a>
+          </section>
+          <section className="flex-content padding_1x">
+            <h3>Company</h3>
+            <a href="about.html"> About Us</a>
+            <a href="contact.html">Contact Us</a>
+            <a href="privacy-policy.html">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+          </section>
+          <section className="flex-content padding_1x">
+            <h3>Download App </h3>
+            <div className="imgg-a">
+              <a href="https://play.google.com/store/apps/details?id=com.bloodlinkapp.in" target="_main"><img src="uploads/app/googly.png" /></a>
+            </div>
+          </section>
+          <section className="flex-content padding_1x">
+            {/* <h3>Blood links logo</h3> */}
+            <div className="logo-img5">
+              <img src="uploads/app/logo.svg" />
+            </div>
+            <p>Blood Links is an platform that helps to streamline blood donation and blood request which puts the power
+              to save a life in the palm of your hand. </p>
+            <section className="my-anchor-foot">
+              <a href="#" className="my-anchor-yo"><i className="fa fa-facebook" /></a>
+              <a href="#" className="my-anchor-yo"><i className="fa fa-twitter" /></a>
+              <a href="#" className="my-anchor-yo"><i className="fa fa-dribbble" /></a>
+              <a href="#" className="my-anchor-yo"><i className="fa fa-linkedin" /></a>
+            </section>
+          </section>
+        </div>
+        <div className="flex">
+        </div>
+      </footer>
+
+      <div className="bottom-footer-1">
+        <p>Copyright 2024 FAST FYP</p>
+      </div>
     </div>
   );
 };

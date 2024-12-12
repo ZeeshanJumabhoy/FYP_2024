@@ -32,7 +32,7 @@ const BookAppointment = () => {
   };
 
   const handleBookAppointment = (bloodBankId, bloodBankName) => {
-    navigate("/AppointmentAvailabilityDetails", { state: { bloodBankId, bloodBankName } }); // Pass bloodBankId as state
+    navigate("/AppointmentAvailblityDetails", { state: { bloodBankId, bloodBankName } }); // Pass bloodBankId as state
   };
 
   const fetchBloodBanks = async () => {

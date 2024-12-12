@@ -9,8 +9,6 @@ const router = Router();
 
 //PUT FOR BLOOD BANK
 router.route('/updateAppointmentStatus').put(controller.updateAppointmentStatus);
-router.route('/deletecampaign').delete(controller.deleteCampaign);//Blood Bank Does
-
 
 
 //POST FOR BLOOD BANK
@@ -18,6 +16,7 @@ router.route('/registerbloodbank').post(controller.registerbloodbank); //Admin w
 router.route('/appointmentavailblity').post(controller.appointmentavailblity); //Blood Bank does 
 router.route('/addinventory').post(controller.addinventory);//Blood Bank Does
 router.route('/addcampaign').post(controller.addcampaign);//Blood Bank Does
+router.route('/deleteCampaign').post(controller.deleteCampaign);//Blood Bank Does
 
 // GET METHOD FOR BLOOD BANK 
 router.route('/getbloodbank').get(controller.getbloodbank); //User Does

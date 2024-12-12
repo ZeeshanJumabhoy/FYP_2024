@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { Link, useNavigate } from "react-router-dom";
 
 // Styled components for Topbar layout
 const TopBar = styled.div`
@@ -81,19 +82,25 @@ const Topbar = () => {
     setDarkTheme(!darkTheme);
     document.body.style.backgroundColor = darkTheme ? '#f4f4f4' : '#1f1f1f';
   };
-
+ 
   return (
     <>
       {/* Top section with Locate, Campaign, Language, and Theme toggle */}
       <TopBar>
         <TopBarSection>
+          <Link to="/ViewBloodBank">
           <Button>Locate Blood Bank</Button>
+          </Link>
+          <Link to="/ViewCampaign" >
           <Button>Upcoming Campaign</Button>
+          </Link>
         </TopBarSection>
         <TopBarSection>
           <LanguageSelect>
             <option>English</option>
             <option>Arabic</option>
+            <option>سنڌي</option>
+            <option>پنجابی</option>
           </LanguageSelect>
           <ThemeToggle onClick={toggleTheme}>
             {darkTheme ? '🌙' : '☀️'}

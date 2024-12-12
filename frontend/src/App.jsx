@@ -1,180 +1,357 @@
-import React from 'react'
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
-import { useAuthStore } from './Helper/store'
+import React from 'react';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 
-//  Import All Components and Pages
-import Homepage from './Main/Homepage'
-import Register from './Pages/Register'
-import Username from './Pages/Username'
-import Password from './Pages/Password'
-import Recovery from './Pages/Recovery'
-import Reset from './Pages/Reset'
-import Profile from './Pages/Profile'
-import PageNotFound from './Pages/PageNotFound'
+// Import All Components and Pages
+import { useAuthStore } from './Helper/store';
+import Homepage from './Main/Homepage';
+import Homepage2 from './Main/Homepage';
+import Register from './Pages/Register';
+import Username from './Pages/Username';
+import Password from './Pages/Password';
+import Recovery from './Pages/Recovery';
+import Reset from './Pages/Reset';
+import Profile from './Pages/Profile';
+import PageNotFound from './Pages/PageNotFound';
 import FamilyRegistration from './Pages/familyRegistration';
-import RegisterOTP from './Pages/RegisterOTP'
-import RequestBlood from './Pages/RequestBlood'
-import RequestBloodInfo from './Pages/RequestBloodInfo'
-import Questions from './Pages/Questions';
-import Poster from './Main/Poster';
+import RegisterOTP from './Pages/RegisterOTP';
+import RequestBlood from './Pages/RequestBlood';
+import RequestBloodInfo from './Pages/RequestBloodInfo';
 import BookAppointment from './Pages/BookAppointment';
 import BloodRequestUpdate from './Pages/BloodRequestUpdate';
-import Timeslotavailiblity from './Pages/timeslotavailiblity';
-import BloodBankDashboard from './Pages/BloodBankDashboard';
-import ContactUsPage from './Pages/ContactUsPage';
-import { FaDashcube } from 'react-icons/fa';
+import Questions from './Pages/Questions';
+import Questions2 from './Pages/Questions';
+import ViewCampaign from './Pages/ViewCampaign';
+import ViewCampaignUser from './Pages/ViewCampaignUser';
+import ViewBloodBank from './Pages/ViewBloodBank';
+import ViewBloodInventory from './Pages/ViewBloodInventory';
 import EducationalPage from './Pages/EducationalPage';
-import FAQSection from './Main/FAQSection';
-import AppointmentAvailabilityDetails from './Pages/AppointmentAvailblityDetails';
+import AppointmentAvailblityDetails from './Pages/AppointmentAvailblityDetails';
 import UserAppointmentStatusPage from './Pages/UserAppointmentStatusPage';
-import AppointmentRequestsManage from './Pages/AppointmentRequestManage'
-import BloodBankInventory from './Pages/BloodBankInventory'
-import ViewBloodInventory from './Pages/ViewBloodInventory'
-import ViewCampaign from './Pages/ViewCampaign'
-import BloodInventoryManage from './Pages/BloodInventoryManage'
-import ManageCampaign from './Pages/ManageCampaign'
+import AboutUs from './Pages/AboutUs';
+import Topbar from './Main/Topbar';
+import Navbar from './Main/Navbar';
 
-// Protect Route from unauthorized access
+import Navbar2 from './Main/Navbar2';
+import Footer from './Main/Footer';
+import ContactUsPage from './Pages/ContactUsPage';
+
+import ManageCampaign from './Pages/ManageCampaign'
+import AppointmentRequestManage from './Pages/AppointmentRequestManage'
+import AddCampaign  from './Pages/AddCampaign'
+import BloodInventoryManage from './Pages/BloodInventoryManage'
+import Timeslotavailiblity from './Pages/Timeslotavailiblity'
+import BloodBankDashboard from './Pages/BloodBankDashboard'
+
+// Layout Component for Topbar and Navbar
+const Layout = ({ children, isProtected }) => {
+  return (
+    <>
+      <Topbar />
+      {isProtected ? <Navbar2 /> : <Navbar />}
+      <main>{children}</main>
+      <Footer />
+    </>
+  );
+};
+
+// Protect Route from Unauthorized Access
 const ProtectRoute = ({ route, children }) => {
-  if (route === 'Profile') {
-    const token = localStorage.getItem('token')
-    if (token) return children
-  } else {
-    const username = useAuthStore.getState().auth.username
-    if (username) return children
+  const token = localStorage.getItem('token');
+  const username = useAuthStore.getState().auth.username;
+
+  if ((route === 'Profile' && token) || (route !== 'Profile' && username)) {
+    return children;
   }
 
-  // If it's unauthorized access then redirect it to root route
-  return <Navigate to={'/'} replace={true}></Navigate>
-}
+  return <Navigate to="/" replace />;
+};
 
+// Define Routes
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <ManageCampaign/>,
+    element: (
+      <Layout isProtected={false}>
+        <Homepage />
+      </Layout>
+    ),
   },
   {
-    path: '/AppointmentAvailabilityDetails',
-    element: <AppointmentAvailabilityDetails/>
-  } ,
+    path: '/blood-admin',
+    element: (
+      <Layout isProtected={false}>
+        <BloodBankDashboard />
+      </Layout>
+    ),
+  },
   {
-    path: '/ViewBloodInventory',
-    element: <ViewBloodInventory/>
+    path: '/AboutUs',
+    element: (
+      <Layout isProtected={false}>
+        <AboutUs />
+      </Layout>
+    ),
+  },
+  {
+    path: '/ContactUsPage',
+    element: (
+      <Layout isProtected={false}>
+        <ContactUsPage />
+      </Layout>
+    ),
+  },
+  
+  {
+    path: '/Reset',
+    element: (
+      <Layout isProtected={false}>
+        <Reset />
+      </Layout>
+    ),
+  },
+  {
+    path: '/Recovery',
+    element: (
+      <Layout isProtected={false}>
+        <Recovery />
+      </Layout>
+    ),
   },
   {
     path: '/Username',
-    element: <Username />,
-  },
-  {
-    path: '/register',
-    element: <Register />,
-  },
-  {
-    path: '/verification',
-    element: <RegisterOTP />,
-  },
-  {
-    path: '/family-register',
-    element: <FamilyRegistration />,
-  },
-  {
-    path: '/password',
     element: (
-      <ProtectRoute route="Password">
-        <Password />
-      </ProtectRoute>
+      <Layout isProtected={false}>
+        <Username />
+      </Layout>
     ),
   },
   {
-    path: '/recovery',
+    path: '/ViewBloodBank',
     element: (
-      <ProtectRoute route="recovery">
-        <Recovery />
-      </ProtectRoute>
-    ),
-  },
-  {
-    path: '/reset',
-    element: (
-      <ProtectRoute route="reset">
-        <Reset />
-      </ProtectRoute>
-    ),
-  },
-  {
-    path: '/profile',
-    element: (
-      <ProtectRoute route="Profile">
-        <Profile />
-      </ProtectRoute>
-    ),
-  },
-  {
-    path: '/RequestBlood',
-    element: (
-      <ProtectRoute route="RequestBlood">
-        <RequestBlood />
-      </ProtectRoute>
-    ),
-  },
-  {
-    path: '/RequestBloodInfo',
-    element: (
-      <ProtectRoute route="RequestBloodInfo">
-        <RequestBloodInfo />
-      </ProtectRoute>
+      <Layout isProtected={false}>
+        <ViewBloodBank />
+      </Layout>
     ),
   },
   {
     path: '/Questions',
     element: (
-      <ProtectRoute route="Questions">
+      <Layout isProtected={false}>
         <Questions />
-      </ProtectRoute>
+      </Layout>
     ),
   },
   {
-    path: '/BloodRequestUpdate/:id', // Add the dynamic 'id' parameter
+    path: '/register',
     element: (
-      <ProtectRoute route="BloodRequestUpdate">
-        <BloodRequestUpdate />
-      </ProtectRoute>
+      <Layout isProtected={false}>
+        <Register />
+      </Layout>
     ),
   },
   {
-    path: '/timeslot', // Add the dynamic 'id' parameter
+    path: '/verification',
     element: (
-      <ProtectRoute route="timeslot">
-        <timeslot/>
-      </ProtectRoute>
+      <Layout isProtected={false}>
+        <RegisterOTP />
+      </Layout>
     ),
   },
   {
-    path: '/BookAppointment', // Add the dynamic 'id' parameter
+    path: '/EducationalPage',
     element: (
-      <ProtectRoute route="BookAppointment">
-        <BookAppointment/>
-      </ProtectRoute>
+      <Layout isProtected={false}>
+        <EducationalPage />
+      </Layout>
     ),
   },
   {
-    path: '/UserAppointmentStatusPage', // Add the dynamic 'id' parameter
+    path: '/family-register',
     element: (
-      <ProtectRoute route="UserAppointmentStatusPage">
-        <UserAppointmentStatusPage/>
-      </ProtectRoute>
+      <Layout isProtected={false}>
+        <FamilyRegistration />
+      </Layout>
+    ),
+  },
+  {
+    path: '/blood-admin/ManageCampaign',
+    element: (
+      <Layout isProtected={false}>
+        <ManageCampaign />
+      </Layout>
+    ),
+  },
+  {
+    path: '/AppointmentRequestManage',
+    element: (
+      <Layout isProtected={false}>
+        <AppointmentRequestManage />
+      </Layout>
+    ),
+  },
+  {
+    path: '/blood-admin/AddCampaign',
+    element: (
+      <Layout isProtected={false}>
+        <AddCampaign />
+      </Layout>
+    ),
+  },
+  {
+    path: '/blood-admin/BloodInventoryManage',
+    element: (
+      <Layout isProtected={false}>
+        <BloodBankDashboard />
+      </Layout>
+    ),
+  }, 
+  {
+    path: '/blood-admin/Timeslotavailiblity',
+    element: (
+      <Layout isProtected={false}>
+        <Timeslotavailiblity />
+      </Layout>
+    ),
+  },
+  {
+    path: '/password',
+    element: (
+      <Layout isProtected={true}>
+        <ProtectRoute route="Password">
+          <Password />
+        </ProtectRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/Homepage2',
+    element: (
+      <Layout isProtected={true}>
+        <ProtectRoute route="Homepage2">
+          <Homepage2 />
+        </ProtectRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/Questions2',
+    element: (
+      <Layout isProtected={true}>
+        <ProtectRoute route="Questions2">
+          <Questions2 />
+        </ProtectRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/profile',
+    element: (
+      <Layout isProtected={true}>
+        <ProtectRoute route="Profile">
+          <Profile />
+        </ProtectRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/ViewCampaignUser',
+    element: (
+      <Layout isProtected={true}>
+        <ProtectRoute route="ViewCampaignUser">
+          <ViewCampaignUser />
+        </ProtectRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/ViewBloodInventory',
+    element: (
+      <Layout isProtected={true}>
+        <ProtectRoute route="ViewBloodInventory">
+          <ViewBloodInventory />
+        </ProtectRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/UserAppointmentStatusPage',
+    element: (
+      <Layout isProtected={true}>
+        <ProtectRoute route="UserAppointmentStatusPage">
+          <UserAppointmentStatusPage />
+        </ProtectRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/BookAppointment',
+    element: (
+      <Layout isProtected={true}>
+        <ProtectRoute route="BookAppointment">
+          <BookAppointment />
+        </ProtectRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/BloodRequestUpdate',
+    element: (
+      <Layout isProtected={true}>
+        <ProtectRoute route="BloodRequestUpdate">
+          <BloodRequestUpdate />
+        </ProtectRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/AppointmentAvailblityDetails',
+    element: (
+      <Layout isProtected={true}>
+        <ProtectRoute route="AppointmentAvailblityDetails">
+          <AppointmentAvailblityDetails />
+        </ProtectRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/RequestBlood',
+    element: (
+      <Layout isProtected={true}>
+        <ProtectRoute route="RequestBlood">
+          <RequestBlood />
+        </ProtectRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/RequestBloodInfo',
+    element: (
+      <Layout isProtected={true}>
+        <ProtectRoute route="RequestBloodInfo">
+          <RequestBloodInfo />
+        </ProtectRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/ViewCampaign',
+    element: (
+      <Layout isProtected={false}>
+        <ViewCampaign />
+      </Layout>
     ),
   },
   {
     path: '*',
-    element: <PageNotFound />,
+    element: (
+      <Layout isProtected={false}>
+        <PageNotFound />
+      </Layout>
+    ),
   },
-])
+]);
 
+// App Component
 export default function App() {
-  return (
-    <main>
-      <RouterProvider router={router}></RouterProvider>
-    </main>
-  )
+  return <RouterProvider router={router} />;
 }

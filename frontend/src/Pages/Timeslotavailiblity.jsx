@@ -138,7 +138,9 @@ const Timeslotavailiblity = () => {
       <button className="submit-btn" onClick={handleSubmit}>
         Submit Schedule
       </button>
+
     </div>
+    
   );
 };
 

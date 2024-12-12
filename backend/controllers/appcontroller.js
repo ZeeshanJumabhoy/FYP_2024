@@ -1392,13 +1392,24 @@ export async function getCampaign(req, res) {
 
 export async function deleteCampaign(req, res) {
     try {
-        const { bloodBankId, bloodBankName, venue } = req.body;
+        console.log(req.body);
+        const { bloodBankId, bloodBankName, venue, startDateTime, endDateTime } = req.body;
 
         // Validate request input
-        if (!bloodBankId || !bloodBankName || !venue) {
+        if (!bloodBankId || !bloodBankName || !venue || !startDateTime || !endDateTime) {
             return res.status(400).json({
                 success: false,
-                message: 'Please provide bloodBankId, bloodBankName, and complete venue details.',
+                message: 'Please provide bloodBankId, bloodBankName, venue details, startDateTime, and endDateTime.',
+            });
+        }
+
+        // Parse and validate date inputs
+        const start = new Date(startDateTime);
+        const end = new Date(endDateTime);
+        if (isNaN(start) || isNaN(end)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid startDateTime or endDateTime. Please provide valid dates.',
             });
         }
 
@@ -1410,6 +1421,8 @@ export async function deleteCampaign(req, res) {
             'venue.street': venue.street,
             'venue.city': venue.city,
             'venue.state': venue.state,
+            startDateTime: start,
+            endDateTime: end,
         });
 
         if (!campaign) {

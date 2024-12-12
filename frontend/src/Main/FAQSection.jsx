@@ -38,31 +38,29 @@ const FAQSection = () => {
   const [activeIndex, setActiveIndex] = useState(null);
 
   const toggleAnswer = (index) => {
-    setActiveIndex(activeIndex === index ? null : index); // Toggle between open and close
+    setActiveIndex(activeIndex === index ? null : index);
   };
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen p-8 flex flex-col lg:flex-row gap-8">
+    <div className="bg-red-300 text-black min-h-screen p-6 flex flex-col lg:flex-row gap-6">
       {/* FAQ Section */}
       <div className="lg:w-1/2">
-        <h2 className="text-3xl font-bold mb-6">Frequently Asked Questions</h2>
-        <ul className="space-y-4">
+        <h2 className="text-2xl font-bold mb-4">Frequently Asked Questions</h2>
+        <ul className="space-y-3">
           {faqData.map((faq, index) => (
             <li
               key={index}
-              className="border border-gray-700 rounded-lg p-4 hover:bg-gray-800 transition-colors"
+              className="border border-gray-700 rounded-lg p-3 hover:bg-gray-400 transition-colors"
             >
               <div
                 className="flex justify-between items-center cursor-pointer"
                 onClick={() => toggleAnswer(index)}
               >
-                <span className="text-lg font-medium">{faq.question}</span>
-                <span className="text-xl">
-                  {activeIndex === index ? '-' : '+'}
-                </span>
+                <span className="text-base font-medium">{faq.question}</span>
+                <span className="text-lg">{activeIndex === index ? '-' : '+'}</span>
               </div>
               {activeIndex === index && (
-                <p className="mt-3 text-gray-400">{faq.answer}</p>
+                <p className="mt-2 text-gray-500 text-sm">{faq.answer}</p>
               )}
             </li>
           ))}
@@ -71,24 +69,24 @@ const FAQSection = () => {
 
       {/* Blood Type Compatibility Chart */}
       <div className="lg:w-1/2">
-        <h2 className="text-3xl font-bold mb-6">Blood Type Compatibility</h2>
+        <h2 className="text-2xl font-bold mb-4">Blood Type Compatibility</h2>
         <div className="overflow-x-auto">
           <table className="w-full border border-gray-700 text-sm">
-            <thead className="bg-gray-800">
+            <thead className="bg-gray-500">
               <tr>
-                <th className="border border-gray-600 px-4 py-2 text-left">Recipient</th>
-                <th className="border border-gray-600 px-4 py-2 text-left">Donor</th>
+                <th className="border border-gray-600 px-3 py-2 text-left">Recipient</th>
+                <th className="border border-gray-600 px-3 py-2 text-left">Donor</th>
               </tr>
             </thead>
             <tbody>
               {bloodTypeCompatibility.map((row, index) => (
-                <tr key={index} className="hover:bg-gray-800 transition-colors">
-                  <td className="border border-gray-600 px-4 py-2">{row.recipient}</td>
-                  <td className="border border-gray-600 px-4 py-2">
+                <tr key={index} className="hover:bg-gray-400 transition-colors">
+                  <td className="border border-gray-600 px-3 py-2">{row.recipient}</td>
+                  <td className="border border-gray-600 px-3 py-2">
                     {row.donors.map((donor, i) => (
                       <span
                         key={i}
-                        className="inline-block bg-red-500 text-white rounded-full px-3 py-1 mr-2 mb-2"
+                        className="inline-block bg-red-500 text-white rounded-full px-2 py-1 text-xs mr-1 mb-1"
                       >
                         {donor}
                       </span>

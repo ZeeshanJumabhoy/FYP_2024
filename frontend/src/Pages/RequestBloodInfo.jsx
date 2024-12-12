@@ -129,7 +129,7 @@ export default function RequestBlood() {
 
                 <Td className="border px-2 py-1 text-center">
                   <button
-                    onClick={() => handleViewDetails(request)}
+                    onClick={handleBookAppointment}
                     className="bg-blue-500 text-white px-2 py-1 text-xs font-semibold rounded-full hover:bg-blue-600 transition duration-200"
                   >
                     Save A Life
@@ -211,6 +211,10 @@ export default function RequestBlood() {
       console.error("Error deleting blood request:", error);
       toast.error("Failed to delete blood request. Please try again.");
     }
+  };
+
+  const handleBookAppointment = () => {
+    navigate('/Questions');
   };
   
   

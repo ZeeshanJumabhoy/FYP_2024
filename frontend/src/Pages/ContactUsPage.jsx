@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import contactUsBg from "/uploads/app/blood.jpg?url"; // Ensure the correct image path
+import contactUsBg from "/uploads/app/contactus.jpg?url"; // Ensure the correct image path
 
 const ContactUsPage = () => {
   const [formData, setFormData] = useState({
@@ -28,12 +28,12 @@ const ContactUsPage = () => {
       <div
   className="w-full h-96 bg-cover bg-center flex items-center justify-center text-white"
   style={{
-    backgroundImage: `url(${contactUsBgc})`, // Use backticks for template literals
+    backgroundImage: `url(${contactUsBg})`, // Use backticks for template literals
     backgroundSize: 'cover',
     backgroundPosition: 'center',
   }}
 >
-        <h1 className="text-4xl font-bold">Contact Us</h1>
+        <h1 className="text-4xl text-black font-bold">Contact Us</h1>
       </div>
 
       {/* Contact Form Section */}

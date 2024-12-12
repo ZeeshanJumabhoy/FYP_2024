@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const BloodBankDashboard = () => {
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -30,9 +32,8 @@ const BloodBankDashboard = () => {
       <div className="flex flex-col md:flex-row pt-12 h-screen"> {/* Adjusted for header height */}
         {/* Sidebar */}
         <aside
-          className={`bg-white p-4 w-full md:w-1/6 transform md:transform-none md:translate-x-0 transition-transform duration-300 ${
-            menuOpen ? "translate-x-0" : "-translate-x-full"
-          } fixed md:relative h-94 z-20 overflow-y-auto`}
+          className={`bg-white p-4 w-full md:w-1/6 transform md:transform-none md:translate-x-0 transition-transform duration-300 ${menuOpen ? "translate-x-0" : "-translate-x-full"
+            } fixed md:relative h-94 z-20 overflow-y-auto`}
         >
           {/* Close Menu Button for Mobile */}
           <button
@@ -47,12 +48,25 @@ const BloodBankDashboard = () => {
             <span className="ml-2 text-2xl font-bold">LifeSave</span>
           </div>
           <nav className="space-y-4">
-            <MenuItem icon="fa-hand-holding-heart" text="Donate Blood" />
-            <MenuItem icon="fa-search" text="Find Donors" />
-            <MenuItem icon="fa-calendar-alt" text="Schedule Donation" />
-            <MenuItem icon="fa-history" text="Donation History" />
-            <MenuItem icon="fa-hospital" text="Nearest Centers" />
-            <MenuItem icon="fa-info-circle" text="About Us" />
+            <Link to="/AppointmentRequestManage">
+              <MenuItem icon="fa-history" text="Blood Request Manage" />
+            </Link>
+
+            <Link to="AddCampaign">
+              <MenuItem icon="fa-hospital" text="Add Campaign" />
+            </Link>
+
+            <Link to="ManageCampaign">
+              <MenuItem icon="fa-calendar-alt" text="Manage Campaign" />
+            </Link>
+
+            <Link to="Timeslotavailiblity">
+              <MenuItem icon="fa-hand-holding-heart" text="Appointment Scheduling" />
+            </Link>
+
+            <Link to="BloodInventoryManage">
+              <MenuItem icon="fa-info-circle" text="Blood Inventory Manage" />
+            </Link>
             <MenuItem icon="fa-sign-out" text="Logout" />
           </nav>
         </aside>
@@ -178,13 +192,13 @@ const BloodBankDashboard = () => {
 };
 
 const MenuItem = ({ icon, text }) => (
-<a
-  href="#"
-  className="flex items-center text-gray-700 hover:text-red-700 hover:bg-red-100 p-2 rounded transition duration-200"
->
-  <i className={`fas ${icon} text-xl`}></i> {/* Correctly using template literals */}
-  <span className="ml-2">{text}</span>
-</a>
+  <a
+    href="#"
+    className="flex items-center text-gray-700 hover:text-red-700 hover:bg-red-100 p-2 rounded transition duration-200"
+  >
+    <i className={`fas ${icon} text-xl`}></i> {/* Correctly using template literals */}
+    <span className="ml-2">{text}</span>
+  </a>
 );
 
 export default BloodBankDashboard;

@@ -1,5 +1,5 @@
 import React from 'react';
-import bloodDonationBg from '/uploads/app/blood.jpg?url'; // Update with your actual image path
+import bloodDonationBg from '/uploads/app/CampaignCover.png?url'; // Update with your actual image path
 import { FaRegCheckCircle, FaRegQuestionCircle, FaHeartbeat } from 'react-icons/fa';
 
 const EducationalPage = () => {
@@ -14,7 +14,7 @@ const EducationalPage = () => {
         <div className="absolute inset-0 bg-black opacity-50"></div>
         <div className="relative z-10 text-white p-4">
           <h1 className="text-4xl font-bold tracking-wide mb-4">Make a Lifesaving Difference</h1>
-          <p className="text-xl">Donate Blood, Save Lives. Learn More About the Importance of Blood Donation.</p>
+          <p className="text-xl text-white">Donate Blood, Save Lives. Learn More About the Importance of Blood Donation.</p>
         </div>
       </div>
 
@@ -120,7 +120,7 @@ const EducationalPage = () => {
       {/* Call to Action Section */}
       <div className="bg-red-600 text-white py-12 text-center">
         <h2 className="text-3xl font-bold mb-4">Help Save Lives Today</h2>
-        <p className="text-lg mb-6">Your donation makes a difference in the lives of others. Join us and be a lifesaver!</p>
+        <p className="text-lg text-black mb-6">Your donation makes a difference in the lives of others. Join us and be a lifesaver!</p>
         <button className="bg-white text-red-600 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 transition duration-300">
           Donate Now
         </button>
