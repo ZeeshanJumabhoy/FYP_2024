@@ -191,11 +191,6 @@ const UserAppointmentStatusPage = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Footer Section */}
-            <footer className="w-full bg-gray-800 text-white py-4 text-center">
-                <p>© 2024 Blood Donation, All Rights Reserved</p>
-            </footer>
         </div>
     );
 };

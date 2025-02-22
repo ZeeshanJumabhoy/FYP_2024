@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { getAppointmentSchedule,bookappointment } from "../Helper/helper";
+import { getAppointmentSchedule, bookappointment } from "../Helper/helper";
 import { toast } from "react-toastify";
 import useFetch from '../hooks/fetch';
 import "../Styles/button.css";
@@ -26,6 +26,7 @@ const AppointmentAvailabilityDetails = () => {
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [showTooltip, setShowTooltip] = useState(false); // Tooltip visibility state
 
+    // Fetch appointment data on blood bank or day change
     useEffect(() => {
         if (bloodBankId && selectedDay) {
             setAppointmentData(null);
@@ -34,10 +35,13 @@ const AppointmentAvailabilityDetails = () => {
             const fetchData = async () => {
                 try {
                     const response = await getAppointmentSchedule({ bloodBankId, day: selectedDay });
-                    const processedData = processAppointmentData(response.data);
-                    setAppointmentData(processedData);
+                    setAppointmentData(response.data.data.timeSlots); // Use the backend's processed data directly
                 } catch (err) {
-                    setError(err.error || "Failed to fetch appointment schedule");
+                    setError(
+                        <p style={{ color: "black", textAlign: "center", fontWeight: "bold", marginTop: "50px", fontSize: "24px", marginBottom: "50px" }}>
+                            {err.error || "Failed to fetch appointment schedule"}
+                        </p>
+                    );
                 }
             };
 
@@ -45,36 +49,7 @@ const AppointmentAvailabilityDetails = () => {
         }
     }, [bloodBankId, selectedDay]);
 
-    const processAppointmentData = (response) => {
-        const timeSlots = response.data.timeSlots;
-        const slots = [];
-
-        timeSlots.forEach(({ startTime, endTime, maxAppointments, bookedAppointments }) => {
-            const startHour = parseInt(startTime.split(":")[0]);
-            const endHour = parseInt(endTime.split(":")[0]);
-
-            const totalHours = endHour - startHour;
-            const baseAppointments = Math.floor(maxAppointments / totalHours);
-            let remainder = maxAppointments % totalHours;
-
-            for (let i = 0; i < totalHours; i++) {
-                const blockStart = startHour + i;
-                const blockEnd = blockStart + 1;
-                const blockAppointments = baseAppointments + (remainder > 0 ? 1 : 0);
-
-                slots.push({
-                    time: `${blockStart}-${blockEnd}`,
-                    available: blockAppointments,
-                    booked: Math.min(blockAppointments, bookedAppointments),
-                });
-
-                if (remainder > 0) remainder--;
-            }
-        });
-
-        return slots;
-    };
-
+    // Handle day selection
     const handleDayChange = (event) => {
         const dayName = event.target.value;
         setSelectedDay(dayName);
@@ -84,6 +59,7 @@ const AppointmentAvailabilityDetails = () => {
         setDisplayDate(nextDate.toLocaleDateString("en-US"));
     };
 
+    // Get next week's date for a given day
     const getNextWeekDate = (dayName) => {
         const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
         const selectedDayIndex = daysOfWeek.indexOf(dayName);
@@ -96,14 +72,16 @@ const AppointmentAvailabilityDetails = () => {
         return nextDate;
     };
 
+    // Handle time slot selection
     const handleSelect = (index) => {
         setSelectedSlot(index);
         setShowTooltip(false); // Hide tooltip on valid selection
     };
 
-    const handleSubmit = async() => {
+    // Submit appointment
+    const handleSubmit = async () => {
         if (selectedSlot === null) {
-            setShowTooltip(true); // Show tooltip when Submit is clicked without a selection
+            setShowTooltip(true); // Show tooltip if no selection
         } else {
             const appointmentDetails = {
                 firstName,
@@ -111,16 +89,16 @@ const AppointmentAvailabilityDetails = () => {
                 phoneNumber,
                 bloodBankName,
                 bloodBankId,
-                timeslot: appointmentData[selectedSlot]?.time, // Safely access with optional chaining
+                timeslot: appointmentData[selectedSlot]?.startTime + "-" + appointmentData[selectedSlot]?.endTime,
                 date: displayDate,
                 day: selectedDay
             };
             try {
                 const response = await bookappointment(appointmentDetails);
                 if (response.status === 201) {
-                    toast.success("Appointment booked successfully!"); // Success toast
+                    toast.success("Appointment booked successfully!");
                 } else {
-                    toast.error("An error occurred. Please try again."); // Error toast
+                    toast.error("An error occurred. Please try again.");
                 }
             } catch (error) {
                 toast.error(error.message || "An error occurred. Please try again.");
@@ -199,7 +177,7 @@ const AppointmentAvailabilityDetails = () => {
     return (
         <div>
             <div className="bg-blue-50 w-full px-4 py-8" style={{ textAlign: "center" }}>
-                <ToastContainer position="top-center" reverseOrder={false}/>
+                <ToastContainer position="top-center" reverseOrder={false} />
                 <h1 className="text-4xl font-bold text-red-600 mb-4">Pre Appointment Availability</h1>
                 <h2 className="text-2xl font-bold text-green-600 mb-4">
                     Day & Date: {`${selectedDay} ${displayDate}`}
@@ -207,7 +185,8 @@ const AppointmentAvailabilityDetails = () => {
                 <h3 className="text-2xl font-bold text-green-600 mb-4">{bloodBankName}</h3>
             </div>
 
-            <div className="flex flex-col items-center justify-center gap-6 mt-6 px-4">
+            {/* Day Selection */}
+            <div className="flex flex-col items-center justify-center gap-6 mt-6 px-4"  style={{ paddingBottom: "10 px" }}>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 w-full max-w-xs">
                     <label
                         htmlFor="daySelect"
@@ -221,9 +200,6 @@ const AppointmentAvailabilityDetails = () => {
                         onChange={handleDayChange}
                         value={selectedDay}
                     >
-                        <option value="" disabled>
-                            Select Day
-                        </option>
                         <option>Monday</option>
                         <option>Tuesday</option>
                         <option>Wednesday</option>
@@ -235,8 +211,7 @@ const AppointmentAvailabilityDetails = () => {
                 </div>
             </div>
 
-            {/* Toggle Button */}
-            <div className="checkbox-wrapper-8 flex sm:ml-4 items-center">
+            <div className="checkbox-wrapper-8 flex sm:ml-4 items-center" style={{ marginLeft: "7rem" }}>
                 <input
                     type="checkbox"
                     id="cb3-8"
@@ -251,6 +226,8 @@ const AppointmentAvailabilityDetails = () => {
             </div>
 
             {error && <div className="text-red-600">{error}</div>}
+
+            {/* Time Slot Table */}
             {appointmentData && (
                 <div className="mt-8 px-8">
                     <Table>
@@ -280,36 +257,21 @@ const AppointmentAvailabilityDetails = () => {
                                             ></i>
                                         </div>
                                     </Td>
-                                    <Td>{slot.time}</Td>
-                                    <Td>{slot.available}</Td>
-                                    <Td>{slot.booked}</Td>
+                                    <Td>{`${slot.startTime}-${slot.endTime}`}</Td>
+                                    <Td>{slot.maxAppointments}</Td>
+                                    <Td>{slot.bookedAppointments}</Td>
                                 </Tr>
                             ))}
                         </Tbody>
                     </Table>
-                    <div className="flex justify-end items-center mt-6 gap-4">
-                        <button
-                            onClick={() => console.log("Back button clicked")}
-                            className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded"
-                        >
-                            Back
-                        </button>
-                        <div className="flex flex-col items-center">
-                            <button
-                                onClick={handleSubmit}
-                                disabled={selectedSlot === null} // Check explicitly for null
-                                className={`${selectedSlot !== null
-                                    ? "bg-blue-500 hover:bg-blue-600"
-                                    : "bg-gray-300 cursor-not-allowed"
-                                    } text-white font-bold py-2 px-6 rounded`}
-                            >
-                                Submit
-                            </button>
-                            {showTooltip && selectedSlot === null && (
-                                <div style={styles.tooltip}>First select the time slot!</div>
-                            )}
-                        </div>
-                    </div>
+
+                    <button
+                        onClick={handleSubmit}
+                        disabled={selectedSlot === null}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded mt-6"
+                    >
+                        Submit
+                    </button>
                 </div>
             )}
         </div>

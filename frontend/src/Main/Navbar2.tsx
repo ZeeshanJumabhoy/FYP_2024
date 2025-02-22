@@ -72,7 +72,10 @@ function Navbar() {
               <Link to="/BookAppointment">Book Appointment</Link>
             </li>
             <li>
-              <Link to="/Questions">Check Eligiblity</Link>
+              <Link to="/Questions2">Check Eligiblity</Link>
+            </li>
+            <li>
+              <Link to="/UserAppointmentStatusPage">Appointment Status</Link>
             </li>
             <li>
               <Link to="/Profile">Update Profile</Link>

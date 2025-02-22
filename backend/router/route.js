@@ -10,10 +10,10 @@ const router = Router();
 //PUT FOR BLOOD BANK
 router.route('/updateAppointmentStatus').put(controller.updateAppointmentStatus);
 
-
+ 
 //POST FOR BLOOD BANK
 router.route('/registerbloodbank').post(controller.registerbloodbank); //Admin work
-router.route('/appointmentavailblity').post(controller.appointmentavailblity); //Blood Bank does 
+router.route('/setBloodBankAppointmentSchedule').post(controller.setBloodBankAppointmentSchedule); //Blood Bank does 
 router.route('/addinventory').post(controller.addinventory);//Blood Bank Does
 router.route('/addcampaign').post(controller.addcampaign);//Blood Bank Does
 router.route('/deleteCampaign').post(controller.deleteCampaign);//Blood Bank Does
@@ -56,5 +56,8 @@ router.route('/create-reset-session').get(controller.createResetSession);
 router.route('/update-user').put(middleware.auth, controller.updateUser);
 router.put('/updatebloodrequest/:id', middleware.auth, controller.updatebloodrequest);
 router.route('/reset-password').put(middleware.verifyUser, controller.resetPassword);
+
+// Auto generate 
+router.route('/archivePastCampaigns').post(controller.archivePastCampaigns);
 
 export default router; 

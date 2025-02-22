@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 // Import All Components and Pages
 import { useAuthStore } from './Helper/store';
@@ -20,6 +21,7 @@ import BookAppointment from './Pages/BookAppointment';
 import BloodRequestUpdate from './Pages/BloodRequestUpdate';
 import Questions from './Pages/Questions';
 import Questions2 from './Pages/Questions';
+import BloodBankLocations from './Pages/BloodBankLocations';
 import ViewCampaign from './Pages/ViewCampaign';
 import ViewCampaignUser from './Pages/ViewCampaignUser';
 import ViewBloodBank from './Pages/ViewBloodBank';
@@ -30,6 +32,7 @@ import UserAppointmentStatusPage from './Pages/UserAppointmentStatusPage';
 import AboutUs from './Pages/AboutUs';
 import Topbar from './Main/Topbar';
 import Navbar from './Main/Navbar';
+
 
 import Navbar2 from './Main/Navbar2';
 import Footer from './Main/Footer';
@@ -44,12 +47,15 @@ import BloodBankDashboard from './Pages/BloodBankDashboard'
 
 // Layout Component for Topbar and Navbar
 const Layout = ({ children, isProtected }) => {
+  const location = useLocation();
+  const isBloodAdmin = location.pathname.startsWith('/blood-admin'); 
+
   return (
     <>
-      <Topbar />
-      {isProtected ? <Navbar2 /> : <Navbar />}
+      {!isBloodAdmin && <Topbar />}
+      {!isBloodAdmin && (isProtected ? <Navbar2 /> : <Navbar />)}
       <main>{children}</main>
-      <Footer />
+      {!isBloodAdmin && <Footer />}
     </>
   );
 };
@@ -72,7 +78,7 @@ const router = createBrowserRouter([
     path: '/',
     element: (
       <Layout isProtected={false}>
-        <Homepage />
+        <Homepage/>
       </Layout>
     ),
   },
@@ -130,6 +136,14 @@ const router = createBrowserRouter([
     element: (
       <Layout isProtected={false}>
         <ViewBloodBank />
+      </Layout>
+    ),
+  },
+  {
+    path: '/AboutUs',
+    element: (
+      <Layout isProtected={false}>
+        <BloodBankLocations />
       </Layout>
     ),
   },
@@ -214,6 +228,14 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/ViewBloodInventory',
+    element: (
+      <Layout isProtected={false}>
+          <ViewBloodInventory />
+      </Layout>
+    ),
+  },
+  {
     path: '/password',
     element: (
       <Layout isProtected={true}>
@@ -259,16 +281,6 @@ const router = createBrowserRouter([
       <Layout isProtected={true}>
         <ProtectRoute route="ViewCampaignUser">
           <ViewCampaignUser />
-        </ProtectRoute>
-      </Layout>
-    ),
-  },
-  {
-    path: '/ViewBloodInventory',
-    element: (
-      <Layout isProtected={true}>
-        <ProtectRoute route="ViewBloodInventory">
-          <ViewBloodInventory />
         </ProtectRoute>
       </Layout>
     ),

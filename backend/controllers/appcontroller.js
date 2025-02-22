@@ -3,14 +3,16 @@ import Family from '../model/Family.model.js';
 import Request from '../model/Request.model.js';
 import Corporate from '../model/Corporate.model.js';
 import BloodBank from '../model/Bloodbank.model.js';
-import Availability from '../model/BloodBankAvailability.model.js'; // Assuming this is the schema file
+import Availability from '../model/AppointmentAvailibility.model.js';
 import Appointment from '../model/Appointment.model.js';
 import Inventory from '../model/BloodBankInventory.model.js';
 import BloodCampaign from '../model/Campaign.model.js';
+import BloodCampaignV2 from '../model/BloodCampaignV2.model.js'; // For past campaigns
+import cron from 'node-cron';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import dotenv from 'dotenv'; 
 import { ObjectId } from 'mongodb';
 import otpGenerator from 'otp-generator';
 dotenv.config();
@@ -905,7 +907,7 @@ export async function registerbloodbank(req, res) {
 export async function getbloodbank(req, res) {
     try {
         // Fetch all blood banks and select only specific fields to return
-        const bloodBanks = await BloodBank.find({}, "name address city state bloodBankId phoneNumber contactEmail");
+        const bloodBanks = await BloodBank.find({}, "name address city state bloodBankId phoneNumber contactEmail latitude longitude");
 
         // Check if any blood banks exist
         if (!bloodBanks || bloodBanks.length === 0) {
@@ -927,59 +929,91 @@ export async function getbloodbank(req, res) {
     }
 }
 
-export async function appointmentavailblity(req, res) {
-    try {
-        const { bloodBankCode, schedule } = req.body;
-        const bloodBankId = bloodBankCode;
-        // Validate required fields
-        if (!bloodBankCode || !schedule) {
-            return res.status(400).json({
-                success: false,
-                message: "BloodBankCode and schedule are required.",
-            });
+export async function setBloodBankAppointmentSchedule(req, res) {
+  try {
+    const { bloodBankCode, schedule } = req.body;
+
+    // Validate required fields
+    if (!bloodBankCode || !schedule) {
+      return res.status(400).json({
+        success: false,
+        message: "BloodBankCode and schedule are required.",
+      });
+    }
+
+    // Validate bloodBankCode format
+    if (!/^[A-Z]{2}\d+$/.test(bloodBankCode)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid blood bank code. Format must be like BB1, HB4, etc.",
+      });
+    }
+
+    // Check if the blood bank exists
+    const bloodBankExists = await BloodBank.findOne({ bloodBankId: bloodBankCode });
+    if (!bloodBankExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Blood bank with the provided code does not exist.",
+      });
+    }
+
+    // Process schedule to create one-hour slots with divided appointments
+    const processedSchedule = schedule.map(({ day, timeSlots }) => ({
+      day,
+      timeSlots: timeSlots.flatMap(({ startTime, endTime, maxAppointments, bookedAppointments = 0 }) => {
+        const startHour = parseInt(startTime.split(":")[0]);
+        const endHour = parseInt(endTime.split(":")[0]);
+        const totalSlots = endHour - startHour;
+
+        if (totalSlots <= 0) {
+          throw new Error("Invalid time range: End time must be after start time.");
         }
 
-        // Validate bloodBankCode format
-        const isValidCode = /^[A-Z]{2}\d+$/.test(bloodBankCode);
-        if (!isValidCode) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Invalid blood bank code. It must follow the format like BB1, HB4, etc.",
-            });
-        }
-        // Check if the blood bank exists
-        const bloodBankExists = await BloodBank.findOne({ bloodBankId });
-        if (!bloodBankExists) {
-            return res.status(404).json({
-                success: false,
-                message: "Blood bank with the provided code does not exist.",
-            });
-        }
-        // Upsert the availability
-        const availability = await Availability.findOneAndUpdate(
-            { bloodBankCode }, // Find by bloodBankCode
-            { bloodBankCode, schedule }, // Update or set new values
-            {
-                upsert: true, // Insert if not found
-                new: true, // Return the updated or created document
-                runValidators: true, // Validate schema rules
-            }
-        );
-        // Respond with the created/updated document
-        return res.status(200).json({
-            success: true,
-            message: "Blood bank availability registered successfully.",
-            data: availability,
+        const baseAppointments = Math.floor(maxAppointments / totalSlots);
+        let remainder = maxAppointments % totalSlots;
+
+        // Generate 1-hour slots
+        return Array.from({ length: totalSlots }, (_, i) => {
+          const slotStart = startHour + i;
+          const slotEnd = slotStart + 1;
+          const slotAppointments = baseAppointments + (remainder > 0 ? 1 : 0);
+          if (remainder > 0) remainder--;
+
+          return {
+            startTime: `${String(slotStart).padStart(2, "0")}:00`,
+            endTime: `${String(slotEnd).padStart(2, "0")}:00`,
+            maxAppointments: slotAppointments,
+            bookedAppointments: Math.min(slotAppointments, bookedAppointments), // Prevent overbooking
+          };
         });
-    } catch (error) {
-        console.error("Error in appointmentavailability:", error.message);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error.",
-            error: error.message,
-        });
-    }
+      }),
+    }));
+
+    const availability = await Availability.findOneAndUpdate(
+      { bloodBankCode }, // Find by bloodBankCode
+      { bloodBankCode, schedule: processedSchedule }, // Save processed schedule
+      {
+        upsert: true, // Insert if not found
+        new: true, // Return the updated or created document
+        runValidators: true, // Validate schema rules
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Blood bank availability registered successfully.",
+      data: availability,
+    });
+
+  } catch (error) {
+    console.error("Error in appointmentavailblity:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+      error: error.message,
+    });
+  }
 }
 
 export async function getappointmentschedule(req, res) {
@@ -995,25 +1029,15 @@ export async function getappointmentschedule(req, res) {
         }
 
         // Validate bloodBankCode format
-        const isValidCode = /^[A-Z]{2}\d+$/.test(bloodBankCode);
-        if (!isValidCode) {
+        if (!/^[A-Z]{2}\d+$/.test(bloodBankCode)) {
             return res.status(400).json({
                 success: false,
-                message:
-                    "Invalid blood bank code. It must follow the format like BB1, HB4, etc.",
+                message: "Invalid blood bank code. Format must be like BB1, HB4, etc.",
             });
         }
 
         // Validate day
-        const validDays = [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday",
-        ];
+        const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
         if (!validDays.includes(day)) {
             return res.status(400).json({
                 success: false,
@@ -1021,27 +1045,30 @@ export async function getappointmentschedule(req, res) {
             });
         }
 
-        // Find the availability for the blood bank and day
-        const availability = await Availability.findOne(
-            { bloodBankCode, "schedule.day": day },
-            { "schedule.$": 1 } // Project only the matching schedule array
-        );
+        // Find availability with matching bloodBankCode and day
+        const availability = await Availability.findOne({ bloodBankCode });
 
         if (!availability) {
             return res.status(404).json({
                 success: false,
-                message: "No availability found for the provided blood bank and day.",
+                message: "No availability found for the provided blood bank.",
             });
         }
 
-        // Extract the timeSlots array
-        const timeSlots = availability.schedule[0]?.timeSlots || [];
+        // Find the schedule for the requested day
+        const daySchedule = availability.schedule.find((d) => d.day === day);
 
-        // Respond with only the timeSlots
+        if (!daySchedule) {
+            return res.status(404).json({
+                success: false,
+                message: "No schedule found for the specified day.",
+            });
+        }
+
         return res.status(200).json({
             success: true,
             message: "Availability details retrieved successfully.",
-            data: { timeSlots },
+            data: { timeSlots: daySchedule.timeSlots },
         });
     } catch (error) {
         console.error("Error in getappointmentschedule:", error.message);
@@ -1055,56 +1082,166 @@ export async function getappointmentschedule(req, res) {
 
 export async function bookappointment(req, res) {
     try {
-        // Destructuring the necessary fields from the request body
-        const {
-            firstName,
-            email,
-            phoneNumber,
-            bloodBankName,
-            bloodBankId,
-            timeslot,
-            date,
-            day,
-        } = req.body;
-
-        // Validate the data (you can add more validations as needed)
-        if (!firstName || !email || !phoneNumber || !bloodBankName || !bloodBankId || !timeslot || !date || !day) {
-            return res.status(400).json({ message: 'All fields are required' });
-        }
-
-        // Check if there is an existing appointment with the same email and status is null
-        const existingAppointment = await Appointment.findOne({ email });
-        if (existingAppointment && existingAppointment.status === null) {
-            return res.status(400).json({
-                message: 'An appointment already exists for this email with a pending status.'
-            });
-        }
-
-        // Create a new appointment instance
-        const newAppointment = new Appointment({
-            firstName,
-            email,
-            phoneNumber,
-            bloodBankName,
-            bloodBankId,
-            timeslot,
-            date,
-            day,
+      const {
+        firstName,
+        email,
+        phoneNumber,
+        bloodBankName,
+        bloodBankId,
+        timeslot,
+        date,
+        day,
+      } = req.body;
+  
+      if (!firstName || !email || !phoneNumber || !bloodBankName || !bloodBankId || !timeslot || !date || !day) {
+        return res.status(400).json({ message: 'All fields are required' });
+      }
+  
+      // Check if there is an existing appointment with the same email and status is null
+      const existingAppointment = await Appointment.findOne({ email });
+      if (existingAppointment && existingAppointment.status === null) {
+        return res.status(400).json({
+          message: 'An appointment already exists for this email with a pending status.'
         });
-
-        // Save the new appointment to the database
-        await newAppointment.save();
-
-        // Return a success response
-        return res.status(201).json({
-            message: 'Appointment booked successfully',
-            appointment: newAppointment,
+      }
+  
+      // Find the availability for the specific blood bank and day
+      const availability = await Availability.findOne({ bloodBankCode: bloodBankId });
+      if (!availability) {
+        return res.status(404).json({
+          message: 'No availability found for the provided blood bank.',
         });
+      }
+  
+      // Find the schedule for the requested day
+      const daySchedule = availability.schedule.find((d) => d.day === day);
+      if (!daySchedule) {
+        return res.status(404).json({
+          message: 'No schedule found for the specified day.',
+        });
+      }
+  
+      // Find the specific timeslot
+      const timeSlot = daySchedule.timeSlots.find((slot) => `${slot.startTime}-${slot.endTime}` === timeslot);
+      if (!timeSlot) {
+        return res.status(404).json({
+          message: 'No timeslot found for the specified time.',
+        });
+      }
+  
+      // Check if there are available appointments
+      if (timeSlot.maxAppointments <= timeSlot.bookedAppointments) {
+        return res.status(400).json({
+          message: 'No available appointments for the specified timeslot.',
+        });
+      }
+  
+      // Create a new appointment
+      const newAppointment = new Appointment({
+        firstName,
+        email,
+        phoneNumber,
+        bloodBankName,
+        bloodBankId,
+        timeslot,
+        date,
+        day,
+      });
+  
+      await newAppointment.save();
+  
+      // Update the availability
+      timeSlot.bookedAppointments += 1;
+      timeSlot.maxAppointments -= 1;
+      await availability.save();
+  
+      return res.status(201).json({
+        message: 'Appointment booked successfully',
+        appointment: newAppointment,
+      });
     } catch (error) {
-        console.error('Error booking appointment:', error);
-        return res.status(500).json({ message: 'Failed to book appointment', error: error.message });
+      console.error('Error booking appointment:', error);
+      return res.status(500).json({ message: 'Failed to book appointment', error: error.message });
     }
-}
+  }
+
+// export async function bookappointment(req, res) {
+//     try {
+//         const {
+//             firstName,
+//             email,
+//             phoneNumber,
+//             bloodBankName,
+//             bloodBankId,
+//             timeslot,
+//             date,
+//             day,
+//         } = req.body;
+
+//         if (!firstName || !email || !phoneNumber || !bloodBankName || !bloodBankId || !timeslot || !date || !day) {
+//             return res.status(400).json({ message: 'All fields are required' });
+//         }
+
+//         // Check if there is an existing appointment with the same email and status is null
+//         // const existingAppointment = await Appointment.findOne({ email });
+//         // if (existingAppointment && existingAppointment.status === null) {
+//         //     return res.status(400).json({
+//         //         message: 'An appointment already exists for this email with a pending status.'
+//         //     });
+//         // }
+
+//         // Find the availability for the specific blood bank, day, and timeslot
+//         // const availability = await Availability.findOne({
+//         //     bloodBankId,
+//         //     day,
+//         //     "timeSlots.startTime": timeslot.split('-')[0] // Match based on the starting time of the slot
+//         // });
+
+//         // if (!availability) {
+//         //     return res.status(404).json({ message: 'Availability not found for the selected time slot' });
+//         // }
+
+//         // Find the specific time slot in the availability document
+//         const timeSlotIndex = Availability.timeSlots.findIndex(slot => slot.startTime === timeslot.split('-')[0]);
+
+//         if (timeSlotIndex === -1) {
+//             return res.status(404).json({ message: 'Time slot not found' });
+//         }
+
+//         if (Availability.timeSlots[timeSlotIndex].availableAppointments <= 0) {
+//             return res.status(400).json({ message: 'No available appointments for this slot' });
+//         }
+
+//         // Decrease availableAppointments and increase bookedAppointments
+//         Availability.timeSlots[timeSlotIndex].availableAppointments -= 1;
+//         Availability.timeSlots[timeSlotIndex].bookedAppointments += 1;
+
+//         // Save the updated availability
+//         await Availability.save();
+
+//         // Create a new appointment
+//         const newAppointment = new Appointment({
+//             firstName,
+//             email,
+//             phoneNumber,
+//             bloodBankName,
+//             bloodBankId,
+//             timeslot,
+//             date,
+//             day,
+//         });
+
+//         await newAppointment.save();
+
+//         return res.status(201).json({
+//             message: 'Appointment booked successfully',
+//             appointment: newAppointment,
+//         });
+//     } catch (error) {
+//         console.error('Error booking appointment:', error);
+//         return res.status(500).json({ message: 'Failed to book appointment', error: error.message });
+//     }
+// }
 
 export async function getappointmentdetails(req, res) {
     try {
@@ -1154,7 +1291,6 @@ export async function getappointmentdetailsbybloodbank(req, res) {
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 }
-
 
 export async function updateAppointmentStatus(req, res) {
     try {
@@ -1362,6 +1498,7 @@ export async function addcampaign(req, res) {
     }
 }
 
+
 export async function getCampaign(req, res) {
     try {
         // Retrieve all campaigns
@@ -1487,4 +1624,41 @@ export async function getCampaignByBloodBank(req, res) {
     }
 }
 
+export async function archivePastCampaigns() {
+    const session = await mongoose.startSession(); 
 
+    try {
+        session.startTransaction(); 
+        const currentDate = new Date();
+
+        // Find past campaigns
+        const pastCampaigns = await BloodCampaign.find({ endDateTime: { $lt: currentDate } }).session(session);
+
+        if (pastCampaigns.length > 0) {
+            console.log(`Found ${pastCampaigns.length} past campaigns. Archiving...`);
+
+            
+            await BloodCampaignV2.insertMany(pastCampaigns, { ordered: false });
+
+            
+            await BloodCampaign.deleteMany({ endDateTime: { $lt: currentDate } }).session(session);
+
+            await session.commitTransaction(); 
+            console.log(`Successfully archived ${pastCampaigns.length} past campaigns.`);
+        } else {
+            console.log('No past campaigns found to archive.');
+        }
+    } catch (error) {
+        await session.abortTransaction(); // Rollback if any error occurs
+        console.error('Error archiving campaigns:', error);
+    } finally {
+        session.endSession(); // Close session
+    }
+}
+
+// For future currently done by running server as not in cloud server
+// Schedule job to run every day at midnight (12:00 AM)
+cron.schedule('0 0 * * *', () => {
+    console.log('Running campaign archive job...');
+    archivePastCampaigns();
+});

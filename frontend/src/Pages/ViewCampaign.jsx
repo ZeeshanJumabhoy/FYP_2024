@@ -71,10 +71,10 @@ const App = () => {
                     }));
                     setEvents(campaigns);
                 } else {
-                    throw new Error(response.message || "Failed to fetch campaigns.");
+                    throw new Error(response.message || "No Campaigns Right Now");
                 }
             } catch (err) {
-                setError(err.message || "Failed to fetch campaigns.");
+                setError(err.message || "No Campaigns Right Now");
             }
         };
 

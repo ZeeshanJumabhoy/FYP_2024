@@ -145,6 +145,13 @@ const BloodBankInventory = () => {
                         {bank.address}
                       </a>
                     </p>
+                    {/* Add onClick to log bloodBankId */}
+                    <button
+                      className="book-appointment-button"
+                      onClick={() => handleBookAppointment(bank.bloodBankId, bank.name)} // Navigate with bloodBankId
+                    >
+                      View Inventory
+                    </button>
                     <hr className="card-divider" />
                     <p>
                       📞 {bank.phoneNumber} <br />

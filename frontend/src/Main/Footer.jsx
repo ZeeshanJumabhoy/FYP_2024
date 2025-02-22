@@ -1,8 +1,10 @@
 import React from "react";
 
+
+
 const Footer = () => {
   return (
-    <footer className="bg-red-700 text-white py-8">
+    <footer className="bg-red-700 text-white">
 
       <div className="container mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
         {/* Save Life Section */}
@@ -52,7 +54,7 @@ const Footer = () => {
           </a>
         </div>
       </div>
-      <div className="bottom-footer-1">
+      <div className="bottom-footer-1 bottom-0 w-full bg-black text-white text-center py-2">
         <p>Copyright 2024 FAST FYP</p>
       </div>
     </footer>

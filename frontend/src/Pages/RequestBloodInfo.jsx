@@ -39,8 +39,8 @@ export default function RequestBlood() {
           const response = await axios.get(`/api/getbloodrequestinfo/${userEmail}`);
           setUserRequests(response.data);
         } catch (error) {
-          setUserError("Failed to load your blood requests");
-          toast.error("Failed to load your blood requests");
+          setUserError("No Blood Request have been made from Yourside");
+          toast.error("No Blood Request have been made from Yourside");
         } finally {
           setUserLoading(false);
         }
@@ -56,15 +56,46 @@ export default function RequestBlood() {
 
     if (buttonType === "all") {
       if (allError) {
-        setError("Failed to load all blood requests");
+        setError(
+          <p style={{ 
+              color: "black", 
+              textAlign: "center", 
+              fontWeight: "bold", 
+              fontSize: "24px", 
+              marginTop: "50px",
+              marginBottom: "50px" 
+          }}>
+              Failed to load all blood requests
+          </p>
+      );
+
         toast.error("Failed to load all blood requests");
       } else if (allRequests) {
         setdata(allRequests.requests || []);
       }
     } else {
       if (userError) {
-        setError("Failed to load your blood requests");
-        toast.error("Failed to load your blood requests");
+        <p style={{ 
+              color: "black", 
+              textAlign: "center", 
+              fontWeight: "bold", 
+              fontSize: "24px", 
+              marginTop: "50px",
+              marginBottom: "50px" 
+          }}>
+              Failed to load all blood requests
+          </p>
+        setError(<p style={{ 
+          color: "black", 
+          textAlign: "center", 
+          fontWeight: "bold", 
+          fontSize: "24px", 
+          marginTop: "50px",
+          marginBottom: "50px" 
+      }}>
+          No Blood Request have been made from Yourside
+      </p>);
+        toast.error("No Blood Request have been made from Yourside");
       } else if (userRequests) {
         setdata(userRequests.requests || []);
       }

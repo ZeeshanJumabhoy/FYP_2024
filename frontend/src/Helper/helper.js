@@ -261,7 +261,7 @@ export async function appointmentavailability(credentials) {
     try {
 
         // Make the API call to save the appointment availability
-        const { status, data } = await axios.post("api/appointmentavailblity", credentials);
+        const { status, data } = await axios.post("api/setBloodBankAppointmentSchedule", credentials);
 
         if (status === 200 || status === 201) {
             console.log("Availability successfully registered:", data);
@@ -292,7 +292,7 @@ export async function getAppointmentSchedule({ bloodBankId, day }) {
         return Promise.resolve({ data });
     } catch (error) {
         return Promise.reject({
-            error: "Failed to fetch appointment schedule!",
+            error: "No Appointment Available for the selected day!",
             details: error?.response?.data || error.message,
         });
     }

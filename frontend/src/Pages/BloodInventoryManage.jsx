@@ -21,7 +21,7 @@ const BloodInventoryManage = () => {
                     setLastUpdated(response.data.data.updatedAt);
                 }
             } catch (err) {
-                setError(err.message || "Failed to fetch inventory.");
+                setError(err.message || "Inventory not found for the specified blood bank");
             }
         };
 
