@@ -140,7 +140,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/AboutUs',
+    path: '/BloodBankLocations',
     element: (
       <Layout isProtected={false}>
         <BloodBankLocations />

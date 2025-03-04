@@ -8,6 +8,7 @@ import Appointment from '../model/Appointment.model.js';
 import Inventory from '../model/BloodBankInventory.model.js';
 import BloodCampaign from '../model/Campaign.model.js';
 import BloodCampaignV2 from '../model/BloodCampaignV2.model.js'; // For past campaigns
+import BloodBankCredentials from '../model/BloodBankCredentials.model.js';
 import cron from 'node-cron';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -15,6 +16,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv'; 
 import { ObjectId } from 'mongodb';
 import otpGenerator from 'otp-generator';
+import axios from 'axios';
 dotenv.config();
 
 /** POST: http://localhost:8080/api/register 
@@ -245,8 +247,85 @@ export async function register(req, res) {
     }
 }
 
+export async function registerBloodBankCredentials(req, res) {
+    try {
+        const { bloodBankId, authorizedPersonName, email, password, userEmail } = req.body;
 
-// Helper Functions
+        const existingCredential = await BloodBankCredentials.findOne({
+            $or: [{ email }, { bloodBankId }]
+        });
+
+        if (existingCredential) {
+            return res.status(400).json({ error: 'Email or Blood Bank ID already exists' });
+        }
+
+        const hashedPassword = await hashPassword(password);
+
+        const newCredential = new BloodBankCredentials({
+            bloodBankId,
+            authorizedPersonName,
+            email,
+            password: hashedPassword
+        });
+
+        await newCredential.save();
+
+        const emailData = {
+            username: authorizedPersonName,
+            userEmail: userEmail,
+            subject: "Blood Safe Life - Blood Bank Registration Successful",
+            mailType: "bloodbankcredentails",
+            password: password, 
+            bloodbankemail: email
+        };
+
+        // Send email notification
+        await axios.post('http://localhost:8080/api/send-mail', emailData);
+
+        res.status(201).json({ message: 'Blood Bank Credentials Created Successfully' });
+
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+
+export async function updateBloodBankCredentials(req, res) {
+    try {
+        const { bloodBankId, oldPassword, newPassword, authorizedPersonName, email } = req.body;
+
+        const credentials = await BloodBankCredentials.findOne({ bloodBankId });
+
+        if (!credentials) {
+            return res.status(404).json({ error: 'Blood Bank Credentials not found' });
+        }
+
+        // Handling comparePassword without modifying it
+        try {
+            await comparePassword(oldPassword, credentials.password);
+        } catch (error) {
+            return res.status(400).json({ error: 'Old password is incorrect' });
+        }
+
+        const updatedData = {
+            authorizedPersonName: authorizedPersonName || credentials.authorizedPersonName,
+            email: email || credentials.email
+        };
+
+        if (newPassword) {
+            updatedData.password = await hashPassword(newPassword);
+        }
+
+        await BloodBankCredentials.updateOne({ bloodBankId }, { $set: updatedData });
+
+        res.status(200).json({ message: 'Blood Bank Credentials Updated Successfully' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
 async function hashPassword(password) {
     return new Promise((resolve, reject) => {
         if (password) {
@@ -260,12 +339,6 @@ async function hashPassword(password) {
     });
 }
 
-/** POST: http://localhost:8080/api/login 
- * @param: {
-  "username" : "the_247",
-  "password" : "RAJ@482003",
-  }
-*/
 export async function login(req, res) {
 
     try {
@@ -302,8 +375,48 @@ export async function login(req, res) {
     }
 }
 
+export async function loginBloodBank(req, res) {
+    try {
+        const { email, password } = req.body;
 
-/** GET: http://localhost:8080/api/user/the_247 **/
+        if (!email || !password) {
+            return res.status(400).send({ error: 'Email or password missing' });
+        }
+
+        const bloodBank = await BloodBankCredentials.findOne({ email });
+
+        if (!bloodBank) {
+            return res.status(404).send({ error: 'Email not found' });
+        }
+
+        comparePassword(password, bloodBank.password)
+            .then(() => {
+                const payload = {
+                    bloodBankId: bloodBank.bloodBankId,
+                    email: bloodBank.email,
+                    authorizedPersonName: bloodBank.authorizedPersonName
+                };
+
+                const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '24h' });
+
+                return res.status(200).send({
+                    msg: 'Login Successful',
+                    authorizedPersonName: bloodBank.authorizedPersonName,
+                    bloodBankId: bloodBank.bloodBankId,
+                    email: bloodBank.email,
+                    token: token
+                });
+            })
+            .catch((err) => {
+                res.status(401).send({ error: 'Invalid password' });
+            });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send({ error: 'Internal Server Error' });
+    }
+}
+
 export async function getUser(req, res) {
     try {
         const { email } = req.params;
@@ -463,8 +576,6 @@ export async function updateUser(req, res) {
     }
 }
 
-/** GET: http://localhost:8080/api/generate-otp **/
-
 export async function generateOTP(req, res) {
     try {
         const OTP = otpGenerator.generate(6, {
@@ -472,22 +583,32 @@ export async function generateOTP(req, res) {
             upperCaseAlphabets: false,
             specialChars: false,
         });
+
         req.app.locals.OTP = OTP;
+        req.app.locals.OTP_Expiry = Date.now() + 1 * 60 * 1000;
+
         res.status(201).send({ OTP: OTP });
     } catch (err) {
         res.status(401).send(err);
     }
 }
 
-/** GET: http://localhost:8080/api/verify-otp  **/
 export async function verifyOTP(req, res) {
     try {
         const { otp } = req.query;
         const generatedOTP = req.app.locals.OTP;
-        if (parseInt(otp) == parseInt(generatedOTP)) {
+        const OTP_Expiry = req.app.locals.OTP_Expiry;
+
+        // Check if OTP exists and is still valid
+        if (!generatedOTP || !OTP_Expiry || Date.now() > OTP_Expiry) {
+            return res.status(400).send({ error: 'OTP expired or invalid' });
+        }
+
+        if (parseInt(otp) === parseInt(generatedOTP)) {
             req.app.locals.OTP = null; // Resets the OTP
+            req.app.locals.OTP_Expiry = null;
             req.app.locals.resetSession = true; // Starts the password reset session
-            return res.status(201).send({ msg: 'OTP Verifed Successfully' });
+            return res.status(201).send({ msg: 'OTP Verified Successfully' });
         } else {
             return res.status(400).send({ error: 'Invalid OTP' });
         }
@@ -495,9 +616,6 @@ export async function verifyOTP(req, res) {
         res.status(401).send(err);
     }
 }
-
-// successfully redirect user when OTP is valid
-/** GET: http://localhost:8080/api/create-reset-session **/
 
 export async function createResetSession(req, res) {
     try {
@@ -608,25 +726,6 @@ export async function requestblood(req, res) {
     }
 }
 
-export async function getAllUserEmails(req, res) {
-    try {
-        const { email } = req.params; // Extract the email to exclude from the request parameters
-
-        // Fetch both emails and first names, excluding the specified email
-        const users = await UserModel.find({ email: { $ne: email } }, 'email firstName');
-
-        // Map the result to extract emails and first names
-        const userDetails = users.map(user => ({
-            email: user.email,
-            firstName: user.firstName
-        }));
-
-        res.status(200).json({ users: userDetails }); // Send the emails and first names as JSON response
-    } catch (error) {
-        console.error('Error fetching user details:', error);
-        res.status(500).json({ message: 'Failed to retrieve user details.' });
-    }
-}
 
 export async function notifyUsersOfBloodRequest(req, res) {
     try {
@@ -674,6 +773,26 @@ export async function sendBloodRequestEmails(req, res) {
     } catch (error) {
         console.error("Error sending blood request emails:", error);
         throw new Error("Failed to send blood request emails.");
+    }
+}
+
+export async function getAllUserEmails(req, res) {
+    try {
+        const { email } = req.params; // Extract the email to exclude from the request parameters
+
+        // Fetch both emails and first names, excluding the specified email
+        const users = await UserModel.find({ email: { $ne: email } }, 'email firstName');
+
+        // Map the result to extract emails and first names
+        const userDetails = users.map(user => ({
+            email: user.email,
+            firstName: user.firstName
+        }));
+
+        res.status(200).json({ users: userDetails }); // Send the emails and first names as JSON response
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        res.status(500).json({ message: 'Failed to retrieve user details.' });
     }
 }
 
@@ -756,7 +875,6 @@ export async function getAllPendingBloodRequests(req, res) {
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 }
-
 
 export async function deletebloodrequest(req, res) {
     try {
@@ -1163,7 +1281,7 @@ export async function bookappointment(req, res) {
       console.error('Error booking appointment:', error);
       return res.status(500).json({ message: 'Failed to book appointment', error: error.message });
     }
-  }
+}
 
 // export async function bookappointment(req, res) {
 //     try {

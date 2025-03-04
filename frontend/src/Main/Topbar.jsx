@@ -89,6 +89,9 @@ const Topbar = () => {
       <TopBar>
         <TopBarSection>
           <Link to="/ViewBloodBank">
+          <Button>Locate Blood Inventory</Button>
+          </Link>
+          <Link to="/BloodBankLocations">
           <Button>Locate Blood Bank</Button>
           </Link>
           <Link to="/ViewCampaign" >

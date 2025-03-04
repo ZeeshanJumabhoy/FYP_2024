@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import connect from "./database/connection.js";
 import router from "./router/route.js";
 import fetch from 'node-fetch';
+import swaggerDocs from "./docs/swagger.js";  
+
 
 // Set up global .env access
 dotenv.config();
@@ -27,6 +29,8 @@ app.disable("x-powered-by");
 
 // Route API
 app.use("/api", router);
+
+swaggerDocs(app);
 
 app.get("/", (req, res) => {
     res.status(201).json("HOME GET REQUEST");

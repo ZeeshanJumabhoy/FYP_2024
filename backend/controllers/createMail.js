@@ -10,6 +10,8 @@ export default function createMail(type, args) {
             return sendBloodRequestEmails(args);
         case 'appointmentconfirmation':
             return appointmentconfirmation(args);
+        case 'bloodbankcredentails':
+            return bloodbankcredentials(args);    
         default:
             return null;
     }
@@ -342,3 +344,56 @@ function appointmentconfirmation(args) {
     `;
 }
 
+function bloodbankcredentials(args) {
+    const { username, bloodbankemail, password } = args;
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { font-family: 'Open Sans', sans-serif; background-color: #f9f9f9; color: #333; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+            .header { background-color: #ff4d4d; color: #fff; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+            .header h1 { margin: 0; font-size: 22px; }
+            .content { padding: 20px; text-align: left; }
+            .content p { font-size: 16px; line-height: 1.6; margin: 10px 0; }
+            .credentials { background-color: #f2f2f2; padding: 15px; border-radius: 8px; margin-top: 10px; }
+            .credentials p { margin: 5px 0; font-weight: bold; }
+            .cta { margin-top: 20px; text-align: center; }
+            .cta a { background-color: #ff4d4d; color: #fff; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold; }
+            .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #666; }
+            .note { font-size: 14px; color: #777; margin-top: 15px; }
+            .warning { font-size: 14px; color: #d9534f; font-weight: bold; margin-top: 15px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Welcome to Blood Safe Life 🩸</h1>
+            </div>
+            <div class="content">
+                <p>Dear ${username},</p>
+                <p>We are pleased to inform you that your Blood Bank account has been successfully registered on <strong>Blood Safe Life</strong>.</p>
+                <p>You can now log in using the credentials below:</p>
+                <div class="credentials">
+                    <p>Email: <span style="color:#ff4d4d;">${bloodbankemail}</span></p>
+                    <p>Temporary Password: <span style="color:#ff4d4d;">${password}</span></p>
+                </div>
+                <p class="note">For security reasons, we strongly recommend updating your password upon your first login.</p>
+                <p class="warning">⚠️ Do not share your credentials with anyone.</p>
+                <p>If you need to reset your password, please contact our representative to receive a password reset link.</p>
+                <div class="cta">
+                    <a href="https://yourwebsite.com/login" target="_blank">Login Now</a>
+                </div>
+            </div>
+            <div class="footer">
+                <p>If you have any questions, feel free to reach out to us.</p>
+                <p>Contact us at: <a href="mailto:BloodSafeLife.help@gmail.com">BloodSafeLife.help@gmail.com</a></p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+}
