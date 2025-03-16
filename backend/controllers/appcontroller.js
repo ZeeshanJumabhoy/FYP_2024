@@ -1,6 +1,7 @@
 import UserModel from '../model/User.model.js';
 import Family from '../model/Family.model.js';
 import Request from '../model/Request.model.js';
+import RequestStatus from '../model/BloodRequestStatus.model.js';
 import Corporate from '../model/Corporate.model.js';
 import BloodBank from '../model/Bloodbank.model.js';
 import Availability from '../model/AppointmentAvailibility.model.js';
@@ -13,7 +14,7 @@ import cron from 'node-cron';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv'; 
+import dotenv from 'dotenv';
 import { ObjectId } from 'mongodb';
 import otpGenerator from 'otp-generator';
 import axios from 'axios';
@@ -275,7 +276,7 @@ export async function registerBloodBankCredentials(req, res) {
             userEmail: userEmail,
             subject: "Blood Safe Life - Blood Bank Registration Successful",
             mailType: "bloodbankcredentails",
-            password: password, 
+            password: password,
             bloodbankemail: email
         };
 
@@ -288,7 +289,6 @@ export async function registerBloodBankCredentials(req, res) {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }
-
 
 export async function updateBloodBankCredentials(req, res) {
     try {
@@ -482,7 +482,6 @@ export async function getfetchUser(req, res) {
         return res.status(500).send({ error: 'Internal Server Error', details: err });
     }
 }
-
 
 async function comparePassword(originalPass, hashedPassword) {
     return new Promise((resolve, reject) => {
@@ -726,7 +725,6 @@ export async function requestblood(req, res) {
     }
 }
 
-
 export async function notifyUsersOfBloodRequest(req, res) {
     try {
         // Fetch all user emails
@@ -796,6 +794,7 @@ export async function getAllUserEmails(req, res) {
     }
 }
 
+// While This API is getting the info to show the user about the blood request based on email
 export async function getbloodrequestinfo(req, res) {
     try {
         const { email } = req.params;
@@ -803,16 +802,42 @@ export async function getbloodrequestinfo(req, res) {
             return res.status(400).json({ error: 'Email is required' });
         }
 
-        const requests = await Request.find({ email })
-            .select('-createdAt -updatedAt -email -__v'); // Exclude fields
+        // Fetch blood requests made by the user
+        const requests = await Request.find({ email }).select('-createdAt -updatedAt -email -__v');
 
         if (!requests || requests.length === 0) {
             return res.status(404).json({ message: 'No blood request has been made with this email.' });
         }
 
+        // Extract request IDs
+        const requestIds = requests.map(request => request.id);
+
+        console.log('Request IDs:', requestIds);
+
+        // Fetch associated request status data
+        const requestStatusList = await RequestStatus.find({
+            requestId: { $in: requestIds }
+        });
+
+        console.log('Request Status List:', requestStatusList);
+
+        // Merge request data with their status details
+        const responseData = requests.map(request => {
+            const requestStatus = requestStatusList.find(rs => String(rs.requestId) === String(request.id));
+
+            const donorsFoundCount = requestStatus?.donors?.filter(d => d.status === 'Interested').length || 0;
+            const underScreeningCount = requestStatus?.donors?.filter(d => d.status === 'Under Screening').length || 0;
+            const completedCount = requestStatus?.donors?.filter(d => d.status === 'Completed').length || 0;
+
+            return {
+                ...request._doc, // Include all request details
+                donorStatus: `${donorsFoundCount} Donors Found - Awaiting Confirmation, ${underScreeningCount} Under Screening, ${completedCount} Completed - Blood Provided`
+            };
+        });
+
         return res.status(200).json({
             message: 'Blood request information retrieved successfully.',
-            requests,
+            requests: responseData,
         });
     } catch (error) {
         console.error('Error fetching blood request info:', error);
@@ -820,6 +845,7 @@ export async function getbloodrequestinfo(req, res) {
     }
 }
 
+// Used for the updation of a particular request by the user  and this API is getting that data based on id
 export async function getsinglebloodrequestinfo(req, res) {
     try {
         const { id } = req.params;
@@ -844,28 +870,75 @@ export async function getsinglebloodrequestinfo(req, res) {
     }
 }
 
+// export async function getAllPendingBloodRequests(req, res) {
+//     try {
+
+//         const pendingRequests = await Request.find({ status: 'Pending' });
+//         if (!pendingRequests || pendingRequests.length === 0) {
+//             return res.status(404).json({ message: 'No pending blood requests found.' });
+//         }
+
+//         const responseData = pendingRequests.map(request => ({
+//             bloodGroup: request.bloodGroup,
+//             units: request.units,
+//             urgency: request.urgency,
+//             medicalReason: request.medicalReason,
+//             antibodies: request.antibodies,
+//             hospitalName: request.hospital?.hospitalname || 'N/A',
+//             department: request.hospital?.department || 'N/A',
+//             transfusionDateTime: request.transfusionDateTime,
+//             specialRequirements: request.specialRequirements,
+//         }));
+
+//         // Send the filtered pending request data
+//         return res.status(200).json({
+//             message: 'Pending blood requests retrieved successfully.',
+//             requests: responseData,
+//         });
+//     } catch (error) {
+//         console.error('Error fetching pending blood requests:', error);
+//         return res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// }
 
 export async function getAllPendingBloodRequests(req, res) {
     try {
-
         const pendingRequests = await Request.find({ status: 'Pending' });
+
         if (!pendingRequests || pendingRequests.length === 0) {
             return res.status(404).json({ message: 'No pending blood requests found.' });
         }
 
-        const responseData = pendingRequests.map(request => ({
-            bloodGroup: request.bloodGroup,
-            units: request.units,
-            urgency: request.urgency,
-            medicalReason: request.medicalReason,
-            antibodies: request.antibodies,
-            hospitalName: request.hospital?.hospitalname || 'N/A',
-            department: request.hospital?.department || 'N/A',
-            transfusionDateTime: request.transfusionDateTime,
-            specialRequirements: request.specialRequirements,
-        }));
+        // Fetch associated request status data
+        const requestStatusList = await RequestStatus.find({
+            requestId: { $in: pendingRequests.map(req => req.id) }
+        });
 
-        // Send the filtered pending request data
+        console.log('Request Status List:', requestStatusList);
+
+        const responseData = pendingRequests.map(request => {
+            // Find the corresponding status record
+            const requestStatus = requestStatusList.find(rs => String(rs.requestId) === String(request.id));
+
+            // Count donors in each stage
+            const donorsFoundCount = requestStatus?.donors?.filter(d => d.status === 'Interested').length || 0;
+            const underScreeningCount = requestStatus?.donors?.filter(d => d.status === 'Under Screening').length || 0;
+            const completedCount = requestStatus?.donors?.filter(d => d.status === 'Completed').length || 0;
+
+            return {
+                bloodGroup: request.bloodGroup,
+                units: request.units,
+                urgency: request.urgency,
+                medicalReason: request.medicalReason,
+                antibodies: request.antibodies,
+                hospitalName: request.hospital?.hospitalname || 'N/A',
+                department: request.hospital?.department || 'N/A',
+                transfusionDateTime: request.transfusionDateTime,
+                specialRequirements: request.specialRequirements,
+                donorStatus: `${donorsFoundCount} Donors Found - Awaiting Confirmation, ${underScreeningCount} Under Screening, ${completedCount} Completed - Blood Provided`
+            };
+        });
+
         return res.status(200).json({
             message: 'Pending blood requests retrieved successfully.',
             requests: responseData,
@@ -1021,7 +1094,6 @@ export async function registerbloodbank(req, res) {
     }
 }
 
-
 export async function getbloodbank(req, res) {
     try {
         // Fetch all blood banks and select only specific fields to return
@@ -1048,90 +1120,90 @@ export async function getbloodbank(req, res) {
 }
 
 export async function setBloodBankAppointmentSchedule(req, res) {
-  try {
-    const { bloodBankCode, schedule } = req.body;
+    try {
+        const { bloodBankCode, schedule } = req.body;
 
-    // Validate required fields
-    if (!bloodBankCode || !schedule) {
-      return res.status(400).json({
-        success: false,
-        message: "BloodBankCode and schedule are required.",
-      });
-    }
-
-    // Validate bloodBankCode format
-    if (!/^[A-Z]{2}\d+$/.test(bloodBankCode)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid blood bank code. Format must be like BB1, HB4, etc.",
-      });
-    }
-
-    // Check if the blood bank exists
-    const bloodBankExists = await BloodBank.findOne({ bloodBankId: bloodBankCode });
-    if (!bloodBankExists) {
-      return res.status(404).json({
-        success: false,
-        message: "Blood bank with the provided code does not exist.",
-      });
-    }
-
-    // Process schedule to create one-hour slots with divided appointments
-    const processedSchedule = schedule.map(({ day, timeSlots }) => ({
-      day,
-      timeSlots: timeSlots.flatMap(({ startTime, endTime, maxAppointments, bookedAppointments = 0 }) => {
-        const startHour = parseInt(startTime.split(":")[0]);
-        const endHour = parseInt(endTime.split(":")[0]);
-        const totalSlots = endHour - startHour;
-
-        if (totalSlots <= 0) {
-          throw new Error("Invalid time range: End time must be after start time.");
+        // Validate required fields
+        if (!bloodBankCode || !schedule) {
+            return res.status(400).json({
+                success: false,
+                message: "BloodBankCode and schedule are required.",
+            });
         }
 
-        const baseAppointments = Math.floor(maxAppointments / totalSlots);
-        let remainder = maxAppointments % totalSlots;
+        // Validate bloodBankCode format
+        if (!/^[A-Z]{2}\d+$/.test(bloodBankCode)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid blood bank code. Format must be like BB1, HB4, etc.",
+            });
+        }
 
-        // Generate 1-hour slots
-        return Array.from({ length: totalSlots }, (_, i) => {
-          const slotStart = startHour + i;
-          const slotEnd = slotStart + 1;
-          const slotAppointments = baseAppointments + (remainder > 0 ? 1 : 0);
-          if (remainder > 0) remainder--;
+        // Check if the blood bank exists
+        const bloodBankExists = await BloodBank.findOne({ bloodBankId: bloodBankCode });
+        if (!bloodBankExists) {
+            return res.status(404).json({
+                success: false,
+                message: "Blood bank with the provided code does not exist.",
+            });
+        }
 
-          return {
-            startTime: `${String(slotStart).padStart(2, "0")}:00`,
-            endTime: `${String(slotEnd).padStart(2, "0")}:00`,
-            maxAppointments: slotAppointments,
-            bookedAppointments: Math.min(slotAppointments, bookedAppointments), // Prevent overbooking
-          };
+        // Process schedule to create one-hour slots with divided appointments
+        const processedSchedule = schedule.map(({ day, timeSlots }) => ({
+            day,
+            timeSlots: timeSlots.flatMap(({ startTime, endTime, maxAppointments, bookedAppointments = 0 }) => {
+                const startHour = parseInt(startTime.split(":")[0]);
+                const endHour = parseInt(endTime.split(":")[0]);
+                const totalSlots = endHour - startHour;
+
+                if (totalSlots <= 0) {
+                    throw new Error("Invalid time range: End time must be after start time.");
+                }
+
+                const baseAppointments = Math.floor(maxAppointments / totalSlots);
+                let remainder = maxAppointments % totalSlots;
+
+                // Generate 1-hour slots
+                return Array.from({ length: totalSlots }, (_, i) => {
+                    const slotStart = startHour + i;
+                    const slotEnd = slotStart + 1;
+                    const slotAppointments = baseAppointments + (remainder > 0 ? 1 : 0);
+                    if (remainder > 0) remainder--;
+
+                    return {
+                        startTime: `${String(slotStart).padStart(2, "0")}:00`,
+                        endTime: `${String(slotEnd).padStart(2, "0")}:00`,
+                        maxAppointments: slotAppointments,
+                        bookedAppointments: Math.min(slotAppointments, bookedAppointments), // Prevent overbooking
+                    };
+                });
+            }),
+        }));
+
+        const availability = await Availability.findOneAndUpdate(
+            { bloodBankCode }, // Find by bloodBankCode
+            { bloodBankCode, schedule: processedSchedule }, // Save processed schedule
+            {
+                upsert: true, // Insert if not found
+                new: true, // Return the updated or created document
+                runValidators: true, // Validate schema rules
+            }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Blood bank availability registered successfully.",
+            data: availability,
         });
-      }),
-    }));
 
-    const availability = await Availability.findOneAndUpdate(
-      { bloodBankCode }, // Find by bloodBankCode
-      { bloodBankCode, schedule: processedSchedule }, // Save processed schedule
-      {
-        upsert: true, // Insert if not found
-        new: true, // Return the updated or created document
-        runValidators: true, // Validate schema rules
-      }
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Blood bank availability registered successfully.",
-      data: availability,
-    });
-
-  } catch (error) {
-    console.error("Error in appointmentavailblity:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-      error: error.message,
-    });
-  }
+    } catch (error) {
+        console.error("Error in appointmentavailblity:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+            error: error.message,
+        });
+    }
 }
 
 export async function getappointmentschedule(req, res) {
@@ -1200,86 +1272,86 @@ export async function getappointmentschedule(req, res) {
 
 export async function bookappointment(req, res) {
     try {
-      const {
-        firstName,
-        email,
-        phoneNumber,
-        bloodBankName,
-        bloodBankId,
-        timeslot,
-        date,
-        day,
-      } = req.body;
-  
-      if (!firstName || !email || !phoneNumber || !bloodBankName || !bloodBankId || !timeslot || !date || !day) {
-        return res.status(400).json({ message: 'All fields are required' });
-      }
-  
-      // Check if there is an existing appointment with the same email and status is null
-      const existingAppointment = await Appointment.findOne({ email });
-      if (existingAppointment && existingAppointment.status === null) {
-        return res.status(400).json({
-          message: 'An appointment already exists for this email with a pending status.'
+        const {
+            firstName,
+            email,
+            phoneNumber,
+            bloodBankName,
+            bloodBankId,
+            timeslot,
+            date,
+            day,
+        } = req.body;
+
+        if (!firstName || !email || !phoneNumber || !bloodBankName || !bloodBankId || !timeslot || !date || !day) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        // Check if there is an existing appointment with the same email and status is null
+        const existingAppointment = await Appointment.findOne({ email });
+        if (existingAppointment && existingAppointment.status === null) {
+            return res.status(400).json({
+                message: 'An appointment already exists for this email with a pending status.'
+            });
+        }
+
+        // Find the availability for the specific blood bank and day
+        const availability = await Availability.findOne({ bloodBankCode: bloodBankId });
+        if (!availability) {
+            return res.status(404).json({
+                message: 'No availability found for the provided blood bank.',
+            });
+        }
+
+        // Find the schedule for the requested day
+        const daySchedule = availability.schedule.find((d) => d.day === day);
+        if (!daySchedule) {
+            return res.status(404).json({
+                message: 'No schedule found for the specified day.',
+            });
+        }
+
+        // Find the specific timeslot
+        const timeSlot = daySchedule.timeSlots.find((slot) => `${slot.startTime}-${slot.endTime}` === timeslot);
+        if (!timeSlot) {
+            return res.status(404).json({
+                message: 'No timeslot found for the specified time.',
+            });
+        }
+
+        // Check if there are available appointments
+        if (timeSlot.maxAppointments <= timeSlot.bookedAppointments) {
+            return res.status(400).json({
+                message: 'No available appointments for the specified timeslot.',
+            });
+        }
+
+        // Create a new appointment
+        const newAppointment = new Appointment({
+            firstName,
+            email,
+            phoneNumber,
+            bloodBankName,
+            bloodBankId,
+            timeslot,
+            date,
+            day,
         });
-      }
-  
-      // Find the availability for the specific blood bank and day
-      const availability = await Availability.findOne({ bloodBankCode: bloodBankId });
-      if (!availability) {
-        return res.status(404).json({
-          message: 'No availability found for the provided blood bank.',
+
+        await newAppointment.save();
+
+        // Update the availability
+        timeSlot.bookedAppointments += 1;
+        timeSlot.maxAppointments -= 1;
+        await availability.save();
+
+        return res.status(201).json({
+            message: 'Appointment booked successfully',
+            appointment: newAppointment,
         });
-      }
-  
-      // Find the schedule for the requested day
-      const daySchedule = availability.schedule.find((d) => d.day === day);
-      if (!daySchedule) {
-        return res.status(404).json({
-          message: 'No schedule found for the specified day.',
-        });
-      }
-  
-      // Find the specific timeslot
-      const timeSlot = daySchedule.timeSlots.find((slot) => `${slot.startTime}-${slot.endTime}` === timeslot);
-      if (!timeSlot) {
-        return res.status(404).json({
-          message: 'No timeslot found for the specified time.',
-        });
-      }
-  
-      // Check if there are available appointments
-      if (timeSlot.maxAppointments <= timeSlot.bookedAppointments) {
-        return res.status(400).json({
-          message: 'No available appointments for the specified timeslot.',
-        });
-      }
-  
-      // Create a new appointment
-      const newAppointment = new Appointment({
-        firstName,
-        email,
-        phoneNumber,
-        bloodBankName,
-        bloodBankId,
-        timeslot,
-        date,
-        day,
-      });
-  
-      await newAppointment.save();
-  
-      // Update the availability
-      timeSlot.bookedAppointments += 1;
-      timeSlot.maxAppointments -= 1;
-      await availability.save();
-  
-      return res.status(201).json({
-        message: 'Appointment booked successfully',
-        appointment: newAppointment,
-      });
     } catch (error) {
-      console.error('Error booking appointment:', error);
-      return res.status(500).json({ message: 'Failed to book appointment', error: error.message });
+        console.error('Error booking appointment:', error);
+        return res.status(500).json({ message: 'Failed to book appointment', error: error.message });
     }
 }
 
@@ -1616,7 +1688,6 @@ export async function addcampaign(req, res) {
     }
 }
 
-
 export async function getCampaign(req, res) {
     try {
         // Retrieve all campaigns
@@ -1743,10 +1814,10 @@ export async function getCampaignByBloodBank(req, res) {
 }
 
 export async function archivePastCampaigns() {
-    const session = await mongoose.startSession(); 
+    const session = await mongoose.startSession();
 
     try {
-        session.startTransaction(); 
+        session.startTransaction();
         const currentDate = new Date();
 
         // Find past campaigns
@@ -1755,13 +1826,13 @@ export async function archivePastCampaigns() {
         if (pastCampaigns.length > 0) {
             console.log(`Found ${pastCampaigns.length} past campaigns. Archiving...`);
 
-            
+
             await BloodCampaignV2.insertMany(pastCampaigns, { ordered: false });
 
-            
+
             await BloodCampaign.deleteMany({ endDateTime: { $lt: currentDate } }).session(session);
 
-            await session.commitTransaction(); 
+            await session.commitTransaction();
             console.log(`Successfully archived ${pastCampaigns.length} past campaigns.`);
         } else {
             console.log('No past campaigns found to archive.');
@@ -1780,3 +1851,216 @@ cron.schedule('0 0 * * *', () => {
     console.log('Running campaign archive job...');
     archivePastCampaigns();
 });
+
+export async function updateBloodRequestStatus(req, res) {
+    try {
+        const { requestId, donorEmail, status } = req.body;
+
+        if (!requestId || !donorEmail || !status) {
+            return res.status(400).json({ error: 'Request ID, donor email, and status are required.' });
+        }
+
+        const existingRequest = await Request.findOne({ id: requestId });
+        if (!existingRequest) {
+            return res.status(404).json({ error: 'Invalid request ID, request not found!' });
+        }
+
+        let requestStatus = await RequestStatus.findOne({ requestId });
+
+        if (!requestStatus) {
+            requestStatus = new RequestStatus({
+                requestId,
+                totalRequiredUnits: existingRequest.units,
+                status: 'Waiting for Donors',
+                donors: []
+            });
+        }
+
+        requestStatus.donors = requestStatus.donors || [];
+
+        // Define allowed status transitions
+        const allowedTransitions = {
+            "Interested": ["Under Screening"],
+            "Under Screening": ["Completed"],
+            "Completed": []
+        };
+
+        // Count the number of donors in each status
+        const completedCount = requestStatus.donors.filter(d => d.status === "Completed").length;
+        const screeningCount = requestStatus.donors.filter(d => d.status === "Under Screening").length;
+        const interestedCount = requestStatus.donors.filter(d => d.status === "Interested").length;
+
+        const remainingNeeded = requestStatus.totalRequiredUnits - completedCount;
+
+        // Remove all "Interested" donors if "Under Screening" reaches the needed units
+        if (screeningCount >= remainingNeeded) {
+            requestStatus.donors = requestStatus.donors.filter(d => d.status !== "Interested");
+
+            // If the new donor is trying to become "Interested", reject the request
+            if (status === "Interested") {
+                return res.status(400).json({ error: 'No more donors can be added as "Interested" since required units are being screened.' });
+            }
+        }
+
+        const donorIndex = requestStatus.donors.findIndex(donor => donor.donorEmail === donorEmail);
+
+        if (donorIndex !== -1) {
+            // Check if the transition is valid
+            const currentStatus = requestStatus.donors[donorIndex].status;
+            if (!allowedTransitions[currentStatus].includes(status)) {
+                return res.status(400).json({
+                    error: `Invalid status transition from ${currentStatus} to ${status}. Allowed: ${allowedTransitions[currentStatus].join(", ")}`
+                });
+            }
+            requestStatus.donors[donorIndex].status = status;
+        } else {
+            // New donor can only start with "Interested"
+            if (status !== "Interested") {
+                return res.status(400).json({ error: 'New donors must start with "Interested" status.' });
+            }
+            requestStatus.donors.push({ donorEmail, status });
+        }
+
+        await requestStatus.save();
+
+        // Extract requestor email from existing request
+        const requestorEmail = existingRequest.email;
+
+        // Send email to donor
+        const emailDataForDonor = {
+            userEmail: donorEmail,
+            subject: "Blood Safe Life - Update on Your Donation Status",
+            mailType: "UpdateRequestStatusSendingToDonor",
+            status: requestStatus,
+            username: donorEmail.split('@')[0],
+        };
+        await axios.post('http://localhost:8080/api/send-mail', emailDataForDonor);
+
+        // Send email to requestor
+        const emailDataForRequestor = {
+            userEmail: requestorEmail, // Requestor's email
+            subject: "Blood Safe Life - Update on Your Blood Request",
+            mailType: "UpdateRequestStatusSendingToRequestor",
+            status: requestStatus,
+            username: requestorEmail.split('@')[0],
+        };
+        await axios.post('http://localhost:8080/api/send-mail', emailDataForRequestor);
+
+        return res.status(200).json({
+            message: `Status updated to ${status} successfully`,
+            status: requestStatus
+        });
+
+    } catch (error) {
+        console.error('Error updating request status:', error);
+        return res.status(500).json({ error: 'An error occurred while updating the request status' });
+    }
+}
+
+export async function getInterestedDonorData(req, res) {
+    try {
+        // Fetch all blood requests from the Request table
+        const allRequests = await Request.find();
+
+        if (!allRequests || allRequests.length === 0) {
+            return res.status(200).json({ success: true, message: 'No blood requests found!', data: [] });
+        }
+
+        // Fetch all request statuses from the RequestStatus table
+        const allRequestStatuses = await RequestStatus.find();
+
+        // Create a map for quick lookup of request statuses
+        const requestStatusMap = new Map();
+        allRequestStatuses.forEach(status => {
+            requestStatusMap.set(status.requestId, status.donors || []);
+        });
+
+        // Format response with request details and only interested donors
+        const responseData = allRequests.map(request => {
+            const donors = requestStatusMap.get(request.id) || [];
+            const interestedDonors = donors.filter(donor => donor.status === "Interested");
+
+            return {
+                requestId: request.id,
+                requestedUser: {
+                    name: request.name,
+                    email: request.email,
+                    phoneNumber: request.phoneNumber,
+                    bloodGroup: request.bloodGroup,
+                    hospital: request.hospital,
+                    urgency: request.urgency,
+                    totalRequiredUnits: request.units
+                },
+                interestedDonors: interestedDonors.map(donor => ({
+                    donorEmail: donor.donorEmail,
+                    status: donor.status
+                }))
+            };
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: responseData
+        });
+
+    } catch (error) {
+        console.error('Error fetching all blood bank data:', error);
+        return res.status(500).json({ error: 'An error occurred while fetching blood bank data' });
+    }
+}
+
+export async function getInterestedSingleDonorData(req, res) {
+    try {
+        const { requestId } = req.params;
+
+        if (!requestId) {
+            return res.status(400).json({ error: 'Request ID is required.' });
+        }
+
+        // Fetch the requested user's details from the Request table
+        const requestedUser = await Request.findOne({ id: requestId });
+
+        if (!requestedUser) {
+            return res.status(404).json({ error: 'Request not found!' });
+        }
+
+        // Fetch interested donors from the RequestStatus table
+        // const requestStatus = await RequestStatus.findOne({ where: { requestId } });
+
+        const requestStatus = await RequestStatus.find({
+            requestId: { $in: requestId }
+        });
+
+        const interestedDonors = requestStatus
+            .flatMap(status => status.donors) // Flatten all donors from different requests
+            .filter(donor => donor.status === 'Interested'); // Keep only 'Interested' donors
+
+
+        return res.status(200).json({
+            success: true,
+            requestedUser: {
+                id: requestedUser.id,
+                name: requestedUser.name,
+                email: requestedUser.email,
+                phoneNumber: requestedUser.phoneNumber,
+                bloodGroup: requestedUser.bloodGroup,
+                hospital: requestedUser.hospital,
+                urgency: requestedUser.urgency,
+                totalRequiredUnits: requestedUser.totalRequiredUnits  // Ensure correct field name
+            },
+            interestedDonors: interestedDonors.map(donor => ({
+                donorEmail: donor.donorEmail,
+                status: donor.status
+            }))
+        });
+
+    } catch (error) {
+        console.error('Error fetching blood bank data:', error);
+        return res.status(500).json({ error: 'An error occurred while fetching blood bank data' });
+    }
+}
+
+
+
+
+

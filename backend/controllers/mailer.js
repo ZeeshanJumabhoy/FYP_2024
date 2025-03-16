@@ -33,6 +33,7 @@ export default async function sendMail(req, res) {
             day,
             bloodbankemail,
             password,
+            status,
 
         } = req.body;
 
@@ -55,7 +56,8 @@ export default async function sendMail(req, res) {
             date,
             day,
             password,
-            bloodbankemail
+            bloodbankemail,
+            status,
         });
 
         const email = {

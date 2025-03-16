@@ -1787,7 +1787,191 @@ router.route('/deleteCampaign').post(controller.deleteCampaign);
  */
 router.route('/getcampaignByBloodBank/:bloodBankId').get(controller.getCampaignByBloodBank);
 
+/**
+ * @swagger
+ * /api/updatebloodrequeststatus:
+ *   post:
+ *     summary: Update the status of a blood request.
+ *     description: Updates the status of a blood request as donors show interest, undergo screening, or complete the donation process.
+ *     tags:
+ *       - Blood Requests
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - requestId
+ *               - donorEmail
+ *               - status
+ *             properties:
+ *               requestId:
+ *                 type: string
+ *                 description: The ID of the blood request.
+ *                 example: "65d6a5f3c8e234f9f8a5b2f9"
+ *               donorEmail:
+ *                 type: string
+ *                 description: The email of the donor expressing interest.
+ *                 example: "john@example.com"
+ *               status:
+ *                 type: string
+ *                 enum: ["Interested", "Under Screening", "Completed"]
+ *                 description: The current status of the blood donation process.
+ *                 example: "Interested"
+ *     responses:
+ *       200:
+ *         description: Status updated successfully.
+ *       400:
+ *         description: Invalid request ID, duplicate donor entry, or incorrect status transition.
+ *       404:
+ *         description: Blood request not found.
+ *       500:
+ *         description: Internal server error.
+ */
+router.route('/updatebloodrequeststatus').post(controller.updateBloodRequestStatus);
 
+/**
+ * @swagger
+ * /api/getInterestedDonorData:
+ *   get:
+ *     summary: Get all interested donors for blood requests.
+ *     description: Retrieves details of all blood requests along with donors who have shown interest.
+ *     tags:
+ *       - Blood Requests
+ *     responses:
+ *       200:
+ *         description: Interested donors data retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       requestId:
+ *                         type: integer
+ *                         example: 1
+ *                       requestedUser:
+ *                         type: object
+ *                         properties:
+ *                           name:
+ *                             type: string
+ *                             example: "Ali Khan"
+ *                           email:
+ *                             type: string
+ *                             example: "ali.khan@example.com"
+ *                           phoneNumber:
+ *                             type: string
+ *                             example: "+923001234567"
+ *                           bloodGroup:
+ *                             type: string
+ *                             example: "O+"
+ *                           hospital:
+ *                             type: string
+ *                             example: "City Hospital"
+ *                           urgency:
+ *                             type: string
+ *                             example: "High"
+ *                           totalRequiredUnits:
+ *                             type: integer
+ *                             example: 3
+ *                       interestedDonors:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             donorEmail:
+ *                               type: string
+ *                               example: "ahmed.raza@example.com"
+ *                             status:
+ *                               type: string
+ *                               example: "Interested"
+ *       404:
+ *         description: No blood requests found.
+ *       500:
+ *         description: Internal server error.
+ */
+router.route('/getInterestedDonorData').get(controller.getInterestedDonorData);
+
+/**
+ * @swagger
+ * /api/getInterestedSingleDonorData/{requestId}:
+ *   get:
+ *     summary: Get interested donors for a specific blood request.
+ *     description: Retrieves details of a specific blood request along with donors who have shown interest.
+ *     tags:
+ *       - Blood Requests
+ *     parameters:
+ *       - in: path
+ *         name: requestId
+ *         required: true
+ *         description: The ID of the blood request.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Interested donors data retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 requestedUser:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "Ali Khan"
+ *                     email:
+ *                       type: string
+ *                       example: "ali.khan@example.com"
+ *                     phoneNumber:
+ *                       type: string
+ *                       example: "+923001234567"
+ *                     bloodGroup:
+ *                       type: string
+ *                       example: "O+"
+ *                     hospital:
+ *                       type: string
+ *                       example: "City Hospital"
+ *                     urgency:
+ *                       type: string
+ *                       example: "High"
+ *                     totalRequiredUnits:
+ *                       type: integer
+ *                       example: 3
+ *                 interestedDonors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       donorEmail:
+ *                         type: string
+ *                         example: "ahmed.raza@example.com"
+ *                       status:
+ *                         type: string
+ *                         example: "Interested"
+ *       400:
+ *         description: Request ID is required.
+ *       404:
+ *         description: Request not found.
+ *       500:
+ *         description: Internal server error.
+ */
+router.route('/getInterestedSingleDonorData/:requestId').get(controller.getInterestedSingleDonorData);
 
 
 
@@ -1825,6 +2009,8 @@ router.route('/getappointmentdetailsbybloodbank/:bloodBankId').get(controller.ge
 router.route('/getinventory/:bloodBankId').get(controller.getinventory);//Blood Bank Does
 router.route('/getcampaign').get(controller.getCampaign);
 router.route('/getcampaignByBloodBank/:bloodBankId').get(controller.getCampaignByBloodBank);
+router.route('/getInterestedDonorData').get(controller.getInterestedDonorData);
+router.route('/getInterestedSingleDonorData').get(controller.getInterestedSingleDonorData);
 
 // POST Methods FOR USER 
 router.route('/registerCheck').post(controller.registerCheck);
@@ -1836,7 +2022,7 @@ router.route('/login').post(controller.login);
 router.route('/requestblood').post(middleware.auth,controller.requestblood);
 router.route('/deletebloodrequest/:id').post(middleware.auth,controller.deletebloodrequest);
 router.route('/bookappointment').post(controller.bookappointment);
-
+router.route('/updatebloodrequeststatus').post(controller.updateBloodRequestStatus);
  
 // GET Methods FOR USER
 router.route('/user/:email').get(controller.getUser);

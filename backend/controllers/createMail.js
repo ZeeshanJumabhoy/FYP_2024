@@ -11,7 +11,12 @@ export default function createMail(type, args) {
         case 'appointmentconfirmation':
             return appointmentconfirmation(args);
         case 'bloodbankcredentails':
-            return bloodbankcredentials(args);    
+            return bloodbankcredentials(args); 
+        case 'UpdateRequestStatusSendingToDonor':
+            return UpdateRequestStatusSendingToDonor(args);
+        case 'UpdateRequestStatusSendingToRequestor':
+            return UpdateRequestStatusSendingToRequestor(args);        
+            
         default:
             return null;
     }
@@ -397,3 +402,138 @@ function bloodbankcredentials(args) {
     </html>
     `;
 }
+
+function UpdateRequestStatusSendingToDonor(args) {
+    const { status } = args;
+
+    let message = "";
+
+    if (status === "Interested") {
+        message = `
+            <p>You are just one step away from saving a life! ❤️</p>
+            <p>Please visit the nearest Blood Bank center and donate blood to make a difference today.</p>
+        `;
+    } else if (status === "Under Screening") {
+        message = `
+            <p>Your donation appointment has been confirmed! ✅</p>
+            <p>Thank you for your willingness to donate. Please ensure you arrive at the designated Blood Bank center on time.</p>
+        `;
+    } else if (status === "Completed") {
+        message = `
+            <p>Thank you for your life-saving donation! 🙏</p>
+            <p>Your contribution has made a difference in someone's life. We truly appreciate your generosity.</p>
+        `;
+    } else {
+        message = `
+            <p>We have an update regarding your donation request.</p>
+            <p>Please check your Blood Safe Life account for more details.</p>
+        `;
+    }
+
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { font-family: 'Open Sans', sans-serif; background-color: #f9f9f9; color: #333; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+            .header { background-color: #ff4d4d; color: #fff; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+            .header h1 { margin: 0; font-size: 22px; }
+            .content { padding: 20px; text-align: left; }
+            .content p { font-size: 16px; line-height: 1.6; margin: 10px 0; }
+            .cta { margin-top: 20px; text-align: center; }
+            .cta a { background-color: #ff4d4d; color: #fff; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold; }
+            .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Blood Safe Life - Donation Update 🩸</h1>
+            </div>
+            <div class="content">
+                ${message}
+                <div class="cta">
+                    <a href="https://yourwebsite.com/login" target="_blank">View Details</a>
+                </div>
+            </div>
+            <div class="footer">
+                <p>If you have any questions, feel free to reach out to us.</p>
+                <p>Contact us at: <a href="mailto:BloodSafeLife.help@gmail.com">BloodSafeLife.help@gmail.com</a></p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+}
+
+function UpdateRequestStatusSendingToRequestor(args) {
+    const { status } = args;
+
+    let message = "";
+
+    if (status === "Interested") {
+        message = `
+            <p>Good news! A donor has shown interest in fulfilling your blood request. 🩸</p>
+            <p>We appreciate your patience as they proceed with the donation process.</p>
+            <p>Please stay in touch with the Blood Bank center for further updates.</p>
+        `;
+    } else if (status === "Under Screening") {
+        message = `
+            <p>The donor is currently undergoing the necessary screening process. 🔍</p>
+            <p>We will notify you once the screening is completed and the donation is ready for collection.</p>
+        `;
+    } else if (status === "Completed") {
+        message = `
+            <p>Great news! The blood donation for your request has been successfully completed. 🎉</p>
+            <p>Please coordinate with the Blood Bank for the collection of the donated blood.</p>
+        `;
+    } else {
+        message = `
+            <p>We have an update regarding your blood request. 📢</p>
+            <p>Please check your Blood Safe Life account for more details.</p>
+        `;
+    }
+
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { font-family: 'Open Sans', sans-serif; background-color: #f9f9f9; color: #333; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+            .header { background-color: #ff4d4d; color: #fff; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+            .header h1 { margin: 0; font-size: 22px; }
+            .content { padding: 20px; text-align: left; }
+            .content p { font-size: 16px; line-height: 1.6; margin: 10px 0; }
+            .cta { margin-top: 20px; text-align: center; }
+            .cta a { background-color: #ff4d4d; color: #fff; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold; }
+            .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Blood Safe Life - Blood Request Update 🩸</h1>
+            </div>
+            <div class="content">
+                ${message}
+                <div class="cta">
+                    <a href="https://yourwebsite.com/login" target="_blank">View Details</a>
+                </div>
+            </div>
+            <div class="footer">
+                <p>If you have any questions, feel free to reach out to us.</p>
+                <p>Contact us at: <a href="mailto:BloodSafeLife.help@gmail.com">BloodSafeLife.help@gmail.com</a></p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+}
+
+
